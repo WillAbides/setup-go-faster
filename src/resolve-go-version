@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# required args:
+# $1 - constraint (^1.2.3)
+# $2 - tool cache (${{runner.tool_cache}}/go)
+#
+# env vars:
+# IGNORE_LOCAL_GO
+
+set -e
+[ -n "$DEBUG" ] && set -x
+
+CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+
+. src/lib
+
+GO_VERSION_CONSTRAINT="$1"
+GO_TOOL_CACHE="$2"
+
+# special case for gotip
+if [ "$GO_VERSION_CONSTRAINT" = "gotip" ] || [ "$GO_VERSION_CONSTRAINT" = "tip" ]; then
+  echo "tip"
+  exit
+fi
+
+action_dir="$(dirname -- "$(dirname -- "$0")")"
+
+local_versions="$(ls "$GO_TOOL_CACHE")"
+
+if [ -z "$IGNORE_LOCAL_GO" ]; then
+  # return any exact matches first for fastest possible result
+  for v in $local_versions; do
+    if [ "$v" = "$GO_VERSION_CONSTRAINT" ]; then
+      echo "$v"
+      exit
+    fi
+  done
+fi
+
+# if the exact version is available to download, use it
+check_url="$(download_go_url "$GO_VERSION_CONSTRAINT")"
+if curl -IL --fail -s "$check_url" >/dev/null; then
+  echo "$GO_VERSION_CONSTRAINT"
+  exit
+fi
+
+if [ -z "$IGNORE_LOCAL_GO" ]; then
+  set +e
+  local_matches="$(echo "$local_versions" | "$action_dir/third_party/sh-semver/semver.sh" -r "$GO_VERSION_CONSTRAINT")"
+  set -e
+  if [ -n "$local_matches" ]; then
+    echo "$local_matches" | head -1
+    exit
+  fi
+fi
+
+dl_json="$(curl --retry 4 -s --fail 'https://golang.org/dl/?mode=json&include=all')"
+dl_versions="$(echo "$dl_json" | jq -r '.[].version' | sed 's/^go//g')"
+
+for v in $dl_versions; do
+  if [ "$v" = "$GO_VERSION_CONSTRAINT" ]; then
+    echo "$v"
+    exit
+  fi
+done
+
+echo "$dl_versions" | "$action_dir"/src/semver-select -c "$GO_VERSION_CONSTRAINT" -n 1 -i -

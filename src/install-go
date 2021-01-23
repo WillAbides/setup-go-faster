@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# required global vars:
+# INSTALL_GO_VERSION=1.2.3  # the version of go to install
+# RUNNER_TOOL_CACHE         # provided by action
+#
+# optional vars:
+# INSTALL_GO_FORCE                                     # set to non-empty to force the install
+
+set -e
+[ -n "$DEBUG" ] && set -x
+
+CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+
+. src/lib
+
+if [ -z "$INSTALL_GO_VERSION" ]; then
+  echo "INSTALL_GO_VERSION is required"
+  exit 1
+fi
+
+export GOROOT=""
+export GO111MODULE=off
+
+target_dir="$RUNNER_TOOL_CACHE/go/$INSTALL_GO_VERSION/x64"
+
+tip_target_dir="$RUNNER_TOOL_CACHE/go/tip/x64"
+
+if [ -d "$target_dir" ]; then
+  echo "$target_dir" already exists
+  if [ -z "$INSTALL_GO_FORCE" ]; then
+    skip_install=1
+  fi
+fi
+
+[ -n "$skip_install" ] || install_go "$INSTALL_GO_VERSION" "$target_dir"
+
+GITHUB_ENV="${GITHUB_ENV:-/dev/null}"
+GITHUB_PATH="${GITHUB_PATH:-/dev/null}"
+
+echo "$target_dir/bin" >>"$GITHUB_PATH"
+PATH="$target_dir/bin:$PATH"
+
+gopath=$(go env GOPATH)
+mkdir -p "$gopath/bin"
+echo "$gopath/bin" >>"$GITHUB_PATH"
+PATH="$gopath/bin:$PATH"
+
+unset GOROOT
+echo "GOROOT=" >>"$GITHUB_ENV"
+
+if [ -n "$INSTALL_GO_TIP" ]; then
+  GO111MODULE=off go get golang.org/dl/gotip
+  "$gopath/bin/$(exe_name gotip)" download
+  rm -rf "$tip_target_dir"
+  mkdir -p "$(dirname "$tip_target_dir")"
+  mv "$(sdk_dir)/gotip" "$tip_target_dir"
+
+  PATH="$tip_target_dir/bin:$PATH"
+  echo "$tip_target_dir/bin" >>"$GITHUB_PATH"
+fi
+
+govars='GOCACHE
+GOMODCACHE
+GOPATH
+GOROOT
+GOTOOLDIR'
+
+for var in $govars; do
+  echo "::set-output name=$var::$(go env "$var")"
+done

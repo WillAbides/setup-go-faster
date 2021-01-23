@@ -1,0 +1,93 @@
+#!/bin/bash
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+
+goos() {
+  case "$RUNNER_OS" in
+  macOS)
+    echo "darwin"
+    ;;
+  Linux)
+    echo "linux"
+    ;;
+  Windows)
+    echo "windows"
+    ;;
+  *)
+    uname -s | tr '[:upper:]' '[:lower:]'
+    ;;
+  esac
+}
+
+homedir() {
+  if [ "$(uname -s)" = "Windows" ]; then
+    echo "$USERPROFILE"
+  else
+    echo "$HOME"
+  fi
+}
+
+sdk_dir() {
+  echo "$(homedir)/sdk"
+}
+
+extension() {
+  if [ "$(goos)" = "windows" ]; then
+    echo ".zip"
+  else
+    echo ".tar.gz"
+  fi
+}
+
+version_archive_name() {
+  local version="$1"
+  echo "$version.$(goos)-amd64$(extension)"
+}
+
+init_tmpdir() {
+  local tmpdir="$RUNNER_TEMP"
+  tmpdir="${tmpdir:-"$TMPDIR"}"
+  tmpdir="$tmpdir/install-go"
+  mkdir -p "$tmpdir"
+  rm -rf "$tmpdir"
+  mkdir -p "$tmpdir"
+  trap 'rm -rf "$tmpdir"' EXIT
+  echo "$tmpdir"
+}
+
+download_go_url() {
+  local go_version="$1"
+  archive_name="$(version_archive_name go"$go_version")"
+  echo "https://storage.googleapis.com/golang/$archive_name"
+}
+
+install_go() {
+  local go_version="$1"
+  local target_dir="$2"
+  rm -rf "$target_dir"
+  mkdir -p "$(dirname "$target_dir")"
+  tmpdir="$(init_tmpdir)"
+  cd "$tmpdir"
+
+  archive_name="$(version_archive_name go"$go_version")"
+
+  # 4 retries is 15 seconds of waiting
+  curl -s --retry 4 --fail -O "$(download_go_url "$go_version")"
+
+  if [ "$(extension)" = ".zip" ]; then
+    unzip -q "$archive_name"
+  else
+    tar -xzf "$archive_name"
+  fi
+  mv "go" "$target_dir"
+
+  cd - >/dev/null
+}
+
+exe_name() {
+  suffix=""
+  [ "$(goos)" = "windows" ] && suffix=".exe"
+  echo "$1$suffix"
+}

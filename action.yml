@@ -1,0 +1,92 @@
+name: 'Setup Go Faster'
+description: It's like actions/setup-go but faster.
+inputs:
+  go-version:
+    required: true
+    description: |
+      The version of go to install. It can be an exact version or a semver constraint like '1.14.x' or '^1.14.4'.
+      Do not add "go" or "v" to the beginning of the version.
+
+      Action runners come with some versions of go pre-installed. If any of those versions meet your semver constraint
+      setup-go-faster will use those instead of checking whether a newer go available for download that meets your
+      constraint. You can change this with the `ignore-local` input below.
+
+      A special case value for go-version is `tip` which causes setup-go-faster to install the gotip from source. Be
+      warned there is nothing fast about this. It takes between 3 and 5 minutes on Ubuntu runners and is even slower
+      on Windows and MacOS runners.
+
+      Go versions aren't really semvers, but they are close enough to use semver constraints for the most part.
+      There are a some gotchas to watch out for:
+
+      - Go doesn't release .0 versions. The first 1.15.x releas is 1.15, not 1.15.0. This means if you have set
+        go-version to 1.15, when 1.15.1 is released it won't be used because 1.15 is an exact match. If you want
+        any go in the 1.15 family, set go-version to `1.15.x`
+
+      - Go's pre-releases are not valid semver. For example the beta for 1.16 is 1.16beta1. This means pre-releases
+        need to be explicitely specified.
+
+      For those who learn best from examples:
+
+      | go-version         | description                                                                                    |
+      |--------------------|------------------------------------------------------------------------------------------------|
+      | 1.15.6             | installs 1.15.6                                                                                |
+      | 1.15.x             | installs the newest go that starts with 1.15                                                   |
+      | 1.15               | installs go 1.15, nothing newer. You generally do not want this and should use 1.15.x instead. |
+      | *                  | installs the newest go without any other constraints                                           |
+      | ^1.15.4            | installs a go that is >= 1.15.4 and < 2                                                        |
+      | ~1.15.4            | installs a go that is >= 1.15.4 and < 1.16                                                     |
+      | < 1.15.6 >= 1.15.4 | installs a go that is >= 1.15.4 and < 1.15.6                                                   |
+      | tip                | installs gotip  from source                                                                    |
+
+  ignore-local:
+    required: false
+    description: |
+      Normally a pre-installed version of go that meets the go-version constraints will be used instead
+      of checking whether a newer version is available for download. With ignore-local, the
+      action will always check for a newer version available for download. Set this to any non-empty value
+      to enable.
+outputs:
+  GOCACHE:
+    description: output of `go env GOCACHE`
+    value: ${{ steps.install-go.outputs.GOCACHE }}
+  GOMODCACHE:
+    description: output of `go env GOMODCACHE`
+    value: ${{ steps.install-go.outputs.GOMODCACHE }}
+  GOPATH:
+    description: output of `go env GOPATH`
+    value: ${{ steps.install-go.outputs.GOPATH }}
+  GOROOT:
+    description: output of `go env GOROOT`
+    value: ${{ steps.install-go.outputs.GOROOT }}
+  GOTOOLDIR:
+    description: output of `go env GOTOOLDIR`
+    value: ${{ steps.install-go.outputs.GOTOOLDIR }}
+runs:
+  using: composite
+  steps:
+    - id: resolve-go-version
+      env:
+        DEBUG: ""
+      shell: bash
+      run: |
+        set -e
+        [ -n "$DEBUG" ] && set -x
+
+        export IGNORE_LOCAL_GO='${{ inputs.ignore-local }}'
+
+        constraint='${{ inputs.go-version }}'
+        if [ '${{ inputs.go-version }}' = "tip" ] || [ '${{ inputs.go-version }}' = "gotip" ]; then
+          constraint='*'
+          echo "INSTALL_GO_TIP=1" >> "$GITHUB_ENV"
+        fi
+        got="$(src/resolve-go-version "$constraint" '${{ runner.tool_cache }}/go')"
+        if [ -z "$got" ]; then
+          echo "::error ::No go version found matching '${{ inputs.go-version }}'"
+          exit 1
+        fi
+        echo "INSTALL_GO_VERSION=$got" >> "$GITHUB_ENV"
+    - id: install-go
+      env:
+        DEBUG: ""
+      shell: bash
+      run: src/install-go

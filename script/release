@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+
+if [ -z "$1" ]; then
+  echo first and only argument should be a version >&2
+  exit 1
+fi
+
+readonly version="$(script/semver bump release "$1")"
+readonly major="$(script/semver get major "$version")"
+readonly orig_ref="$(git rev-parse --abbrev-ref HEAD)"
+readonly release_branch="v$major"
+readonly commit="$(git rev-parse HEAD)"
+
+if [ "$orig_ref" != "$release_branch" ] && [ "$orig_ref" != "main" ]; then
+  echo you must release from either main or the release branch >&2
+  exit 1
+fi
+
+if [ "$orig_ref" != "$release_branch" ]; then
+  git switch "$release_branch" --quiet
+  trap 'git switch $orig_ref --quiet' EXIT
+fi
+
+git merge --ff-only "$commit" --quiet
+git push origin "$release_branch"
+
+script/octo repos create-release \
+  --repo WillAbides/setup-go-faster \
+  --tag_name "v$version" \
+  --target_commitish "$release_branch" \
+  --name "v$version" \
+  --format '{{.html_url}}'

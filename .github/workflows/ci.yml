@@ -1,0 +1,10 @@
+name: ci
+on: [ push, workflow_dispatch ]
+jobs:
+  cibuild:
+    name: cibuild
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - run: script/generate --check
+      - run: script/lint
