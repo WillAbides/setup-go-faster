@@ -66,7 +66,7 @@ runs:
   steps:
     - id: resolve-go-version
       env:
-        DEBUG: ""
+        DEBUG: "1"
       shell: bash
       run: |
         set -e
@@ -87,6 +87,6 @@ runs:
         echo "INSTALL_GO_VERSION=$got" >> "$GITHUB_ENV"
     - id: install-go
       env:
-        DEBUG: ""
+        DEBUG: "1"
       shell: bash
       run: src/install-go
