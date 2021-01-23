@@ -92,7 +92,6 @@ runs:
         DEBUG: ""
       shell: bash
       run: src/install-go
-author: WillAbides
 branding:
   color: green
   icon: play-circle
