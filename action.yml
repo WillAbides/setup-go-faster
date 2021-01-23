@@ -65,6 +65,7 @@ runs:
   using: composite
   steps:
     - id: resolve-go-version
+      working-directory: ${{ github.action_path }}
       env:
         DEBUG: "1"
       shell: bash
@@ -86,6 +87,7 @@ runs:
         fi
         echo "INSTALL_GO_VERSION=$got" >> "$GITHUB_ENV"
     - id: install-go
+      working-directory: ${{ github.action_path }}
       env:
         DEBUG: "1"
       shell: bash
