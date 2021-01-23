@@ -2,13 +2,22 @@
 
 It's like actions/setup-go but faster.
 
-### How it is faster?
+### Faster
 
-Mainly by using simple bash scripts to do the downloading and installing instead of nodejs that requires loading
-a node environment.
+On Ubuntu runners, setup-go-faster typically takes about 4s vs 10s for setup-go. This is difficult to benchmark on MacOS
+and Windows because the action runners are inconsistent from one run to another.
+
+When using a pre-installed version of go, the times are in the 1s range for both setup-go and setup-go-faster.
+
+The performance improvement is achieved by using simple bash scripts instead of nodejs meaning there is less overhead
+to deal with.
 
 The exception to the bash-only rule is setup-go-faster downloads and runs https://github.com/WillAbides/semver-select
 to evaluate some version constraints. This takes about 700-1000ms and only affects workflows that use semver constraints.
+
+### Install tip
+
+Setup-go-faster will install go tip from source if you set `go-version: tip`.
 
 ### New versions available immediately
 
@@ -16,15 +25,15 @@ No need to wait around for another repo to merge a PR when a new version of go i
 available versions directly from https://golang.org/dl. As soon as a release is available there, it\'s available to your
 workflow.
 
-### What\'s missing?
-
-Just the `stable` input. I don\'t understand what `stable` adds for actions/setup-go. If you only want stable builds
-you can set go-version accordingly. If there is good use case for `stable`, it can be added.
-
 ### Check out the outputs
 
 Look at those outputs. If you want to use GOPATH or GOMODCACHE as input in some other step, you can just grab it from
 setup-go-faster\'s output instead of having to add another step just to set an environment variable.
+
+### What\'s missing?
+
+Just the `stable` input. I don\'t understand what `stable` adds for actions/setup-go. If you only want stable builds
+you can set go-version accordingly. If there is good use case for `stable`, it can be added.
 
 ## Inputs
 

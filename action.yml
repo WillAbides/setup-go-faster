@@ -67,7 +67,7 @@ runs:
     - id: resolve-go-version
       working-directory: ${{ github.action_path }}
       env:
-        DEBUG: "1"
+        DEBUG: ""
       shell: bash
       run: |
         set -e
@@ -89,6 +89,6 @@ runs:
     - id: install-go
       working-directory: ${{ github.action_path }}
       env:
-        DEBUG: "1"
+        DEBUG: ""
       shell: bash
       run: src/install-go
