@@ -67,7 +67,7 @@ runs:
     - id: run
       working-directory: ${{ github.action_path }}
       env:
-        DEBUG: "1"
+        DEBUG: ""
         IGNORE_LOCAL_GO: ${{ inputs.ignore-local }}
         GO_VERSION: ${{ inputs.go-version }}
       shell: bash
