@@ -44,21 +44,6 @@ if [ -z "$IGNORE_LOCAL_GO" ]; then
   done
 fi
 
-head_go_version="${head_go_version:-"./src/head-go-version"}"
-
-# if the exact version is available to download, use it
-if  "$head_go_version" "$GO_VERSION_CONSTRAINT" ; then
-  echo "$GO_VERSION_CONSTRAINT"
-  exit
-fi
-
-## if the exact version is available to download, use it
-#check_url="$(download_go_url "$GO_VERSION_CONSTRAINT")"
-#if curl -IL --fail -s "$check_url" >/dev/null; then
-#  echo "$GO_VERSION_CONSTRAINT"
-#  exit
-#fi
-
 if [ -z "$IGNORE_LOCAL_GO" ]; then
   set +e
   local_matches="$(echo "$local_versions" | "$action_dir/third_party/sh-semver/semver.sh" -r "$GO_VERSION_CONSTRAINT")"
