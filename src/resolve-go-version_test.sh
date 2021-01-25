@@ -38,23 +38,6 @@ oneTimeSetUp() {
   done
 }
 
-available_head_versions=''
-
-mock_version_available_to_dl() {
-  v="$1"
-  for ver in $available_head_versions ; do
-      if [ "$ver" = "$v" ]; then
-        return 0
-      fi
-  done
-  return 1
-}
-
-mock_head_versions() {
-  export available_head_versions="$1"
-  export mock_head_go_version="1"
-}
-
 test_version() {
   export dl_json="$ex_dl_json"
   tmpdir="$SHUNIT_TMPDIR/${FUNCNAME[0]}"
@@ -62,8 +45,6 @@ test_version() {
   mkdir -p "$toolcache"
   touch "$toolcache/1.14.2"
   touch "$toolcache/1.15.6"
-  mock_head_versions '1.15
-1.15beta1'
 
   tests='*;1.15.6
 1.15;1.15
@@ -81,7 +62,6 @@ tip;tip
   done
 }
 
-
 test_version_ignore_local_go() {
   export dl_json="$ex_dl_json"
   tmpdir="$SHUNIT_TMPDIR/${FUNCNAME[0]}"
@@ -89,10 +69,6 @@ test_version_ignore_local_go() {
   mkdir -p "$toolcache"
   touch "$toolcache/1.14.2"
   touch "$toolcache/1.15.6"
-    mock_head_versions '1.15
-1.15beta1'
-
-  export version_available_to_dl_func="mock_version_available_to_dl"
 
   tests='*;1.15.7
 1.15;1.15

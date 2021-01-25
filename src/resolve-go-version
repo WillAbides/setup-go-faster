@@ -19,6 +19,11 @@ debug_out starting resolve-go-version
 GO_VERSION_CONSTRAINT="$1"
 GO_TOOL_CACHE="$2"
 
+if is_precise_version "$GO_VERSION_CONSTRAINT"; then
+  echo "$GO_VERSION_CONSTRAINT"
+  exit
+fi
+
 # special case for gotip
 if [ "$GO_VERSION_CONSTRAINT" = "gotip" ] || [ "$GO_VERSION_CONSTRAINT" = "tip" ]; then
   echo "tip"
@@ -38,21 +43,6 @@ if [ -z "$IGNORE_LOCAL_GO" ]; then
     fi
   done
 fi
-
-head_go_version="${head_go_version:-"./src/head-go-version"}"
-
-# if the exact version is available to download, use it
-if  "$head_go_version" "$GO_VERSION_CONSTRAINT" ; then
-  echo "$GO_VERSION_CONSTRAINT"
-  exit
-fi
-
-## if the exact version is available to download, use it
-#check_url="$(download_go_url "$GO_VERSION_CONSTRAINT")"
-#if curl -IL --fail -s "$check_url" >/dev/null; then
-#  echo "$GO_VERSION_CONSTRAINT"
-#  exit
-#fi
 
 if [ -z "$IGNORE_LOCAL_GO" ]; then
   set +e
