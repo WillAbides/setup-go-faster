@@ -30,6 +30,7 @@ inputs:
       | go-version         | description                                                                                    |
       |--------------------|------------------------------------------------------------------------------------------------|
       | 1.15.6             | installs 1.15.6                                                                                |
+      | 1.15beta1          | installs 1.15beta1                                                                             |
       | 1.15.x             | installs the newest go that starts with 1.15                                                   |
       | 1.15               | installs go 1.15, nothing newer. You generally do not want this and should use 1.15.x instead. |
       | *                  | installs the newest go without any other constraints                                           |

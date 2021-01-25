@@ -7,10 +7,10 @@ It's like actions/setup-go but faster.
 On Ubuntu runners, setup-go-faster typically takes about 4s vs 10s for setup-go. This is difficult to benchmark on MacOS
 and Windows because the action runners are inconsistent from one run to another.
 
-When using a pre-installed version of go, the times are in the 1s range for both setup-go and setup-go-faster.
+When using a pre-installed version of go, setup-go-faster will be done less than a second vs 1-2 seconds for setup-go.
 
 The performance improvement is achieved by using simple bash scripts instead of nodejs meaning there is less overhead
-to deal with.
+to deal with. It is also smart about skipping constraint checks when "go-version" isn't a constraint.
 
 The exception to the bash-only rule is setup-go-faster downloads and runs https://github.com/WillAbides/semver-select
 to evaluate some version constraints. This takes about 700-1000ms and only affects workflows that use semver constraints.
@@ -67,6 +67,7 @@ For those who learn best from examples:
 | go-version         | description                                                                                    |
 |--------------------|------------------------------------------------------------------------------------------------|
 | 1.15.6             | installs 1.15.6                                                                                |
+| 1.15beta1          | installs 1.15beta1                                                                             |
 | 1.15.x             | installs the newest go that starts with 1.15                                                   |
 | 1.15               | installs go 1.15, nothing newer. You generally do not want this and should use 1.15.x instead. |
 | *                  | installs the newest go without any other constraints                                           |
