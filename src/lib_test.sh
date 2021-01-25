@@ -31,4 +31,33 @@ test_download_go_url() {
     "$(RUNNER_OS=Windows download_go_url "1.15.5")"
 }
 
+test_is_precise_version() {
+  versions='
+1
+1.15
+1.15.1
+1.1.1
+9999.9999.9999
+1.15beta1
+  '
+
+  for v in $versions; do
+    is_precise_version "$v"
+    assertTrue "$v" $?
+  done
+
+  not_versions='
+*
+1.x
+1.15.x
+^ 1.15.1
+  '
+
+  echo "$not_versions" | while IFS= read -r v; do
+    is_precise_version "$v"
+    assertFalse "$v" $?
+  done
+
+}
+
 . ./third_party/shunit2/shunit2
