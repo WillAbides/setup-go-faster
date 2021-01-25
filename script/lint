@@ -4,4 +4,4 @@ set -e
 
 CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
-script/shellcheck ./script/* ./src/*
+script/shellcheck -x ./script/* ./src/*

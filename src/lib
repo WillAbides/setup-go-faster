@@ -21,8 +21,14 @@ goos() {
   esac
 }
 
+debug_out() {
+  if [ -n "$DEBUG" ]; then
+    echo "$@" >&2
+  fi
+}
+
 homedir() {
-  if [ "$(uname -s)" = "Windows" ]; then
+  if [ "$(goos)" = "windows" ]; then
     echo "$USERPROFILE"
   else
     echo "$HOME"
@@ -84,6 +90,22 @@ install_go() {
   mv "go" "$target_dir"
 
   cd - >/dev/null
+}
+
+add_to_system_path() {
+  element="$1"
+  if [ "$(goos)" == "windows" ]; then
+    element="$(echo "/$element" | sed -e 's|\\|/|g' | sed 's/://')"
+  fi
+  echo "$element:$PATH"
+}
+
+add_to_github_path() {
+  element="$1"
+  if [ "$(goos)" == "windows" ]; then
+    element="$(echo "/$element" | sed -e 's|\\|/|g' | sed 's/://')"
+  fi
+  echo "$element" >>"$GITHUB_PATH"
 }
 
 exe_name() {

@@ -14,6 +14,8 @@ CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
 . src/lib
 
+debug_out starting resolve-go-version
+
 GO_VERSION_CONSTRAINT="$1"
 GO_TOOL_CACHE="$2"
 
@@ -37,24 +39,34 @@ if [ -z "$IGNORE_LOCAL_GO" ]; then
   done
 fi
 
+head_go_version="${head_go_version:-"./src/head-go-version"}"
+
 # if the exact version is available to download, use it
-check_url="$(download_go_url "$GO_VERSION_CONSTRAINT")"
-if curl -IL --fail -s "$check_url" >/dev/null; then
+if  "$head_go_version" "$GO_VERSION_CONSTRAINT" ; then
   echo "$GO_VERSION_CONSTRAINT"
   exit
 fi
+
+## if the exact version is available to download, use it
+#check_url="$(download_go_url "$GO_VERSION_CONSTRAINT")"
+#if curl -IL --fail -s "$check_url" >/dev/null; then
+#  echo "$GO_VERSION_CONSTRAINT"
+#  exit
+#fi
 
 if [ -z "$IGNORE_LOCAL_GO" ]; then
   set +e
   local_matches="$(echo "$local_versions" | "$action_dir/third_party/sh-semver/semver.sh" -r "$GO_VERSION_CONSTRAINT")"
   set -e
   if [ -n "$local_matches" ]; then
-    echo "$local_matches" | head -1
+    echo "$local_matches" | tail -1
     exit
   fi
 fi
 
-dl_json="$(curl --retry 4 -s --fail 'https://golang.org/dl/?mode=json&include=all')"
+if [ -z "$dl_json" ]; then
+  dl_json="$(curl --retry 4 -s --fail 'https://golang.org/dl/?mode=json&include=all')"
+fi
 dl_versions="$(echo "$dl_json" | jq -r '.[].version' | sed 's/^go//g')"
 
 for v in $dl_versions; do
