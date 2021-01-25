@@ -48,50 +48,30 @@ inputs:
 outputs:
   GOCACHE:
     description: output of `go env GOCACHE`
-    value: ${{ steps.install-go.outputs.GOCACHE }}
+    value: ${{ steps.run.outputs.GOCACHE }}
   GOMODCACHE:
     description: output of `go env GOMODCACHE`
-    value: ${{ steps.install-go.outputs.GOMODCACHE }}
+    value: ${{ steps.run.outputs.GOMODCACHE }}
   GOPATH:
     description: output of `go env GOPATH`
-    value: ${{ steps.install-go.outputs.GOPATH }}
+    value: ${{ steps.run.outputs.GOPATH }}
   GOROOT:
     description: output of `go env GOROOT`
-    value: ${{ steps.install-go.outputs.GOROOT }}
+    value: ${{ steps.run.outputs.GOROOT }}
   GOTOOLDIR:
     description: output of `go env GOTOOLDIR`
-    value: ${{ steps.install-go.outputs.GOTOOLDIR }}
+    value: ${{ steps.run.outputs.GOTOOLDIR }}
 runs:
   using: composite
   steps:
-    - id: resolve-go-version
+    - id: run
       working-directory: ${{ github.action_path }}
       env:
-        DEBUG: ""
+        DEBUG: "1"
+        IGNORE_LOCAL_GO: ${{ inputs.ignore-local }}
+        GO_VERSION: ${{ inputs.go-version }}
       shell: bash
-      run: |
-        set -e
-        [ -n "$DEBUG" ] && set -x
-
-        export IGNORE_LOCAL_GO='${{ inputs.ignore-local }}'
-
-        constraint='${{ inputs.go-version }}'
-        if [ '${{ inputs.go-version }}' = "tip" ] || [ '${{ inputs.go-version }}' = "gotip" ]; then
-          constraint='*'
-          echo "INSTALL_GO_TIP=1" >> "$GITHUB_ENV"
-        fi
-        got="$(src/resolve-go-version "$constraint" '${{ runner.tool_cache }}/go')"
-        if [ -z "$got" ]; then
-          echo "::error ::No go version found matching '${{ inputs.go-version }}'"
-          exit 1
-        fi
-        echo "INSTALL_GO_VERSION=$got" >> "$GITHUB_ENV"
-    - id: install-go
-      working-directory: ${{ github.action_path }}
-      env:
-        DEBUG: ""
-      shell: bash
-      run: src/install-go
+      run: src/run
 branding:
   color: green
   icon: play-circle

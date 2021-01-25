@@ -4,7 +4,29 @@ jobs:
   cibuild:
     name: cibuild
     runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v2
       - run: script/generate --check
       - run: script/lint
+
+  test:
+    name: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-20.04
+          - ubuntu-18.04
+          - windows-2019
+          - macos-10.15
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v2
+      - run: script/test '*_test.sh'
+      - run: script/test '*_test_long.sh'

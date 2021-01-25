@@ -14,6 +14,10 @@ CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
 . src/lib
 
+debug_out starting install-go
+
+debug_out "INSTALL_GO_VERSION is $INSTALL_GO_VERSION"
+
 if [ -z "$INSTALL_GO_VERSION" ]; then
   echo "INSTALL_GO_VERSION is required"
   exit 1
@@ -38,13 +42,14 @@ fi
 GITHUB_ENV="${GITHUB_ENV:-/dev/null}"
 GITHUB_PATH="${GITHUB_PATH:-/dev/null}"
 
-echo "$target_dir/bin" >>"$GITHUB_PATH"
-PATH="$target_dir/bin:$PATH"
+add_to_github_path "$target_dir/bin"
+PATH="$(add_to_system_path "$target_dir/bin")"
 
 gopath=$(go env GOPATH)
 mkdir -p "$gopath/bin"
-echo "$gopath/bin" >>"$GITHUB_PATH"
-PATH="$gopath/bin:$PATH"
+
+add_to_github_path "$gopath/bin"
+PATH="$(add_to_system_path "$gopath/bin")"
 
 unset GOROOT
 echo "GOROOT=" >>"$GITHUB_ENV"
@@ -56,8 +61,8 @@ if [ -n "$INSTALL_GO_TIP" ]; then
   mkdir -p "$(dirname "$tip_target_dir")"
   mv "$(sdk_dir)/gotip" "$tip_target_dir"
 
-  PATH="$tip_target_dir/bin:$PATH"
-  echo "$tip_target_dir/bin" >>"$GITHUB_PATH"
+  add_to_github_path "$tip_target_dir/bin"
+  PATH="$(add_to_system_path "$tip_target_dir/bin")"
 fi
 
 govars='GOCACHE

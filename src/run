@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# required global vars:
+# RUNNER_TOOL_CACHE         # provided by action
+# GO_VERSION version constraint
+#
+# optional vars:
+# INSTALL_GO_FORCE                                     # set to non-empty to force the install
+
+set -e
+[ -n "$DEBUG" ] && set -x
+
+CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+
+. src/lib
+
+debug_out starting run
+
+resolve_go_version="${resolve_go_version:-"src/resolve-go-version"}"
+
+export INSTALL_GO_TIP
+
+# shellcheck disable=2153 # false positive about GO_VERSION being a misspelling of go_version
+constraint="$GO_VERSION"
+if [ "$constraint" = "tip" ] || [ "$constraint" = "gotip" ]; then
+  constraint='*'
+  INSTALL_GO_TIP=1
+fi
+
+INSTALL_GO_VERSION="$("$resolve_go_version" "$constraint" "$RUNNER_TOOL_CACHE/go")"
+if [ -z "$INSTALL_GO_VERSION" ]; then
+  echo "::error ::No go version found matching '$GO_VERSION'"
+  exit 1
+fi
+
+export INSTALL_GO_VERSION
+src/install-go

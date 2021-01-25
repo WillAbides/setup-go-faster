@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+
+pattern="*_test.sh"
+
+if [ -n "$1" ]; then
+  pattern="$1"
+fi
+
+find ./src -name "$pattern" -exec {} \;
