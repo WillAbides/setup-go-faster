@@ -4,7 +4,7 @@ set -e
 
 CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
-pattern="*_test.sh"
+pattern="*_test.*"
 
 if [ -n "$1" ]; then
   pattern="$1"

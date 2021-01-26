@@ -30,6 +30,7 @@ sub go_version_greater {
     return 0
   }
   foreach ("major", "minor", "patch") {
+    return 0 if $$b{$_} > $$a{$_};
     return 1 if $$a{$_} > $$b{$_};
   }
   # true if b is a pre-release and a isn't
