@@ -87,6 +87,6 @@ jobs:
           echo '${{ toJson( steps.setup_go_1_13_x.outputs ) }}' | jq .
           go version
           set -ex
-          [[ "$(go version)" == *"1.15"* ]]
+          [[ "$(go version)" == *"1.13"* ]]
           [[ '${{steps.setup_go_1_13_x.outputs.GOROOT}}' == *"1.13"* ]]
           [[ '${{steps.setup_go_1_13_x.outputs.GOTOOLDIR}}' == *"1.13"* ]]
