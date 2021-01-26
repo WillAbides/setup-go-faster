@@ -14,7 +14,3 @@ fi
 for f in ./src/*_test.*; do
   "$f"
 done
-
-
-
-#find ./src -name "$pattern" -exec {} \;

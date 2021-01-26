@@ -28,5 +28,5 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v2
-      - run: script/test '*_test.sh'
-      - run: script/test '*_test_long.sh'
+      - run: script/test
+      - run: script/test -long
