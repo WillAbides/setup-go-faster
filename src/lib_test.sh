@@ -62,9 +62,11 @@ test_is_precise_version() {
 do_test_select_go_version() {
   local want="$1"
   local pattern="$2"
+  local versions="${*:3}"
   local got
-  local test_name="\n pattern: $pattern \n versions: ${*:3}\n"
-  got="$(select_go_version "$pattern" "${@:3}")"
+  local test_name="\n pattern: $pattern \n versions: $versions\n"
+
+  got="$(select_go_version "$pattern" "$(echo "$versions" | tr " " "\n")")"
   r_val=$?
   if [ "$want" = "" ]; then
     assertFalse " unexpected exit code\n$test_name" $r_val
@@ -86,6 +88,5 @@ test_select_go_version() {
   do_test_select_go_version "0" "x" "0"
   do_test_select_go_version "" "1.2.3"
 }
-
 
 . ./third_party/shunit2/shunit2
