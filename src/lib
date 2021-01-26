@@ -148,7 +148,7 @@ select_local_version() {
   fi
 
   # handle other constraints
-  local_matches="$(echo "$local_versions" | "./third_party/sh-semver/semver.sh" -r "$constraint")"
+  local_matches="$(echo "$local_versions" | ./src/semver-select -c "$constraint" -n 1 -i -)"
   if [ -n "$local_matches" ]; then
     echo "$local_matches" | tail -1
   fi
