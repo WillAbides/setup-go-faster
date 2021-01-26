@@ -82,6 +82,7 @@ jobs:
         uses: ./
         with:
           go-version: '1.13.x'
+          ignore-local: true
       - name: outputs
         run: |
           echo '${{ toJson( steps.setup_go_1_13_x.outputs ) }}' | jq .
