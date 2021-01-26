@@ -1,7 +1,11 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-require "src/lib.pl";
+
+use FindBin 1.51 qw( $RealBin );
+use lib $RealBin;
+
+require "lib.pl";
 
 my $usage = "usage: pattern version [version...]";
 
