@@ -78,6 +78,7 @@ test_version_ignore_local_go() {
 tip;tip
 1.15beta1;1.15beta1
 1.16beta1;1.16beta1'
+
   for td in $tests; do
     input="$(echo "$td" | cut -d ';' -f1)"
     want="$(echo "$td" | cut -d ';' -f2)"

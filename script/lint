@@ -4,4 +4,5 @@ set -e
 
 CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
+GLOBIGNORE="./src/*.pl"
 script/shellcheck -x ./script/* ./src/*

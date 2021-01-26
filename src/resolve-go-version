@@ -30,40 +30,18 @@ if [ "$GO_VERSION_CONSTRAINT" = "gotip" ] || [ "$GO_VERSION_CONSTRAINT" = "tip" 
   exit
 fi
 
-action_dir="$(dirname -- "$(dirname -- "$0")")"
-
-local_versions="$(ls "$GO_TOOL_CACHE")"
-
-if [ -z "$IGNORE_LOCAL_GO" ]; then
-  # return any exact matches first for fastest possible result
-  for v in $local_versions; do
-    if [ "$v" = "$GO_VERSION_CONSTRAINT" ]; then
-      echo "$v"
-      exit
-    fi
-  done
-fi
+local_versions=()
+while IFS='' read -r line; do local_versions+=("$line"); done < <(ls "$GO_TOOL_CACHE")
 
 if [ -z "$IGNORE_LOCAL_GO" ]; then
-  set +e
-  local_matches="$(echo "$local_versions" | "$action_dir/third_party/sh-semver/semver.sh" -r "$GO_VERSION_CONSTRAINT")"
-  set -e
-  if [ -n "$local_matches" ]; then
-    echo "$local_matches" | tail -1
-    exit
+  lv="$(select_local_version "$GO_VERSION_CONSTRAINT" "$GO_TOOL_CACHE")"
+  if [ -n "$lv" ]; then
+    echo "$lv" && exit
   fi
 fi
 
 if [ -z "$dl_json" ]; then
   dl_json="$(curl --retry 4 -s --fail 'https://golang.org/dl/?mode=json&include=all')"
 fi
-dl_versions="$(echo "$dl_json" | jq -r '.[].version' | sed 's/^go//g')"
 
-for v in $dl_versions; do
-  if [ "$v" = "$GO_VERSION_CONSTRAINT" ]; then
-    echo "$v"
-    exit
-  fi
-done
-
-echo "$dl_versions" | "$action_dir"/src/semver-select -c "$GO_VERSION_CONSTRAINT" -n 1 -i -
+select_remote_version "$GO_VERSION_CONSTRAINT" "$dl_json"
