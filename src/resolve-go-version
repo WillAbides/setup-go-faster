@@ -17,7 +17,7 @@ CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 debug_out starting resolve-go-version
 
 GO_VERSION_CONSTRAINT="$1"
-GO_TOOL_CACHE="$2"
+#GO_TOOL_CACHE="$2"
 
 if is_precise_version "$GO_VERSION_CONSTRAINT"; then
   echo "$GO_VERSION_CONSTRAINT"
@@ -30,15 +30,12 @@ if [ "$GO_VERSION_CONSTRAINT" = "gotip" ] || [ "$GO_VERSION_CONSTRAINT" = "tip" 
   exit
 fi
 
-local_versions=()
-while IFS='' read -r line; do local_versions+=("$line"); done < <(ls "$GO_TOOL_CACHE")
-
-if [ -z "$IGNORE_LOCAL_GO" ]; then
-  lv="$(select_local_version "$GO_VERSION_CONSTRAINT" "$GO_TOOL_CACHE")"
-  if [ -n "$lv" ]; then
-    echo "$lv" && exit
-  fi
-fi
+#if [ -z "$IGNORE_LOCAL_GO" ]; then
+#  lv="$(select_local_version "$GO_VERSION_CONSTRAINT" "$GO_TOOL_CACHE")"
+#  if [ -n "$lv" ]; then
+#    echo "$lv" && exit
+#  fi
+#fi
 
 if [ -z "$dl_json" ]; then
   dl_json="$(curl --retry 4 -s --fail 'https://golang.org/dl/?mode=json&include=all')"

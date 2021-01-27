@@ -53,9 +53,9 @@ version_archive_name() {
 }
 
 init_tmpdir() {
-  local tmpdir="$RUNNER_TEMP"
+  local tmpdir="$RUNNER_WORKSPACE"
   tmpdir="${tmpdir:-"$TMPDIR"}"
-  tmpdir="$tmpdir/install-go"
+  tmpdir="$tmpdir/setup-go-faster/tmp"
   mkdir -p "$tmpdir"
   rm -rf "$tmpdir"
   mkdir -p "$tmpdir"

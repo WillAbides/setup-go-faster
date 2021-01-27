@@ -2,7 +2,7 @@
 
 # required global vars:
 # RUNNER_TOOL_CACHE         # provided by action
-# GO_VERSION version constraint
+# GO_VERSION= version constraint
 #
 # optional vars:
 # INSTALL_GO_FORCE                                     # set to non-empty to force the install
@@ -16,8 +16,6 @@ CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
 debug_out starting run
 
-resolve_go_version="${resolve_go_version:-"src/resolve-go-version"}"
-
 export INSTALL_GO_TIP
 
 # shellcheck disable=2153 # false positive about GO_VERSION being a misspelling of go_version
@@ -27,11 +25,40 @@ if [ "$constraint" = "tip" ] || [ "$constraint" = "gotip" ]; then
   INSTALL_GO_TIP=1
 fi
 
-INSTALL_GO_VERSION="$("$resolve_go_version" "$constraint" "$RUNNER_TOOL_CACHE/go")"
-if [ -z "$INSTALL_GO_VERSION" ]; then
+install_parent="$RUNNER_WORKSPACE/setup-go-faster/go"
+mkdir -p "$install_parent"
+
+go_tool_cache="$RUNNER_TOOL_CACHE/go"
+mkdir -p "$go_tool_cache"
+
+if [ -z "$IGNORE_LOCAL_GO" ]; then
+  lv="$(select_local_version "$constraint" "$install_parent")"
+  target_dir="$install_parent/$lv/x64"
+fi
+
+if [ -z "$IGNORE_LOCAL_GO" ] && [ -z "$target_dir" ]; then
+  lv="$(select_local_version "$constraint" "$go_tool_cache")"
+  target_dir="$go_tool_cache/$lv/x64"
+fi
+
+if [ -z "$target_dir" ]; then
+  if is_precise_version "$constraint"; then
+    lv="$constraint"
+    target_dir="$install_parent/$lv/x64"
+  fi
+fi
+
+if [ -z "$target_dir" ]; then
+  if [ -z "$dl_json" ]; then
+    dl_json="$(curl --retry 4 -s --fail 'https://golang.org/dl/?mode=json&include=all')"
+  fi
+  lv="$(select_remote_version "$constraint" "$dl_json")"
+  target_dir="$install_parent/$lv/x64"
+fi
+
+if [ -z "$lv" ]; then
   echo "::error ::No go version found matching '$GO_VERSION'"
   exit 1
 fi
 
-export INSTALL_GO_VERSION
-src/install-go
+src/install-go "$lv" "$target_dir" "$install_parent/tip/x64"
