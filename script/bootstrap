@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+
+mkdir -p ./external
+
+script/bindown install --output ./external/shunit2 shunit2

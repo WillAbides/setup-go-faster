@@ -9,6 +9,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v2
+      - run: script/bootstrap
       - run: script/generate --check
       - run: script/lint
 
@@ -28,5 +29,6 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v2
+      - run: script/bootstrap
       - run: script/test
       - run: script/test -long

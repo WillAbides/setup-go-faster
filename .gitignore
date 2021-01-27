@@ -1,3 +1,4 @@
 tmp/
-bin/
+bin
 .bindown/
+external/

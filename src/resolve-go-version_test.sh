@@ -88,4 +88,4 @@ tip;tip
   done
 }
 
-. ./third_party/shunit2/shunit2
+. ./external/shunit2

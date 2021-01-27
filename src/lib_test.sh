@@ -89,4 +89,4 @@ test_select_go_version() {
   do_test_select_go_version "" "1.2.3"
 }
 
-. ./third_party/shunit2/shunit2
+. ./external/shunit2

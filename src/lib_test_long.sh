@@ -19,4 +19,4 @@ test_install_go() {
   )
 }
 
-. ./third_party/shunit2/shunit2
+. ./external/shunit2
