@@ -46,15 +46,15 @@ test_version() {
   touch "$toolcache/1.14.2"
   touch "$toolcache/1.15.6"
 
-  tests='*;1.15.6
+  tests='*;1.15.7
 1.15;1.15
-1.15.x;1.15.6
-^1;1.15.6
+1.15.x;1.15.7
+^1;1.15.7
 1.13.x;1.13.3
 tip;tip
 1.15beta1;1.15beta1
 1.16beta1;1.16beta1
-x;1.15.6'
+x;1.15.7'
   for td in $tests; do
     input="$(echo "$td" | cut -d ';' -f1)"
     want="$(echo "$td" | cut -d ';' -f2)"
