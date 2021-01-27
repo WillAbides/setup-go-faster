@@ -89,7 +89,7 @@ install_go() {
   else
     time tar -xzf "$archive_name"
   fi
-  time mv "go" "$target_dir"
+  ln -s "$(pwd)/go" "$target_dir"
   set +x
 
   cd - >/dev/null
