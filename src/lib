@@ -85,7 +85,7 @@ install_go() {
   set -x
   pwd
   if [ "$(extension)" = ".zip" ]; then
-    time unzip -q "$archive_name"
+    time 7z x "$archive_name"
   else
     time tar -xzf "$archive_name"
   fi
