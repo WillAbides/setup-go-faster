@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - id: setup_go
+        env:
+          DEBUG: 1
         name: install tip
         uses: ./
         with:
@@ -43,6 +45,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - id: setup_go_1_15_5
+        env:
+          DEBUG: 1
         name: install 1.15.5
         uses: ./
         with:
@@ -56,6 +60,8 @@ jobs:
           [[ '${{steps.setup_go_1_15_5.outputs.GOROOT}}' == *"1.15.5"* ]]
           [[ '${{steps.setup_go_1_15_5.outputs.GOTOOLDIR}}' == *"1.15.5"* ]]
       - id: setup_go_all
+        env:
+          DEBUG: 1
         name: install '*'
         uses: ./
         with:
@@ -65,6 +71,8 @@ jobs:
           echo '${{ toJson( steps.setup_go_all.outputs ) }}' | jq .
           go version
       - id: setup_go_1_15_5_again
+        env:
+          DEBUG: 1
         name: install 1.15.5 again
         uses: ./
         with:
@@ -78,6 +86,8 @@ jobs:
           [[ '${{steps.setup_go_1_15_5_again.outputs.GOROOT}}' == *"1.15.5"* ]]
           [[ '${{steps.setup_go_1_15_5_again.outputs.GOTOOLDIR}}' == *"1.15.5"* ]]
       - id: setup_go_1_13_x
+        env:
+          DEBUG: 1
         name: install 1.13.x
         uses: ./
         with:
