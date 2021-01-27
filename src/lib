@@ -118,3 +118,49 @@ is_precise_version() {
   [[ $1 =~ ^[0-9]+(.[0-9]+(.[0-9]+)?)?([A-Za-z0-9]+)?$ ]] && return
   return 1
 }
+
+select_go_version() {
+  local constraint="$1"
+  local versions="$2"
+  local got
+  got="$(echo "$versions" | ./src/select_go_version.pl "$constraint")" || return
+  echo "$got"
+}
+
+select_local_version() {
+  local constraint="$1"
+  local go_tool_cache="$2"
+  local local_versions
+  local_versions="$(ls "$go_tool_cache")"
+
+  # return any exact matches first for fastest possible result
+  for v in $local_versions; do
+    if [ "$v" = "$constraint" ]; then
+      echo "$v" && return
+    fi
+  done
+
+  # handle the 1.x type constraint
+  if ver="$(select_go_version "$constraint" "$local_versions")"; then
+    if [ -n "$ver" ]; then
+      echo "$ver" && return
+    fi
+  fi
+
+  # handle other constraints
+  local_matches="$(echo "$local_versions" | ./src/semver-select -c "$constraint" -n 1 -i -)"
+  if [ -n "$local_matches" ]; then
+    echo "$local_matches" | tail -1
+  fi
+}
+
+select_remote_version() {
+  local constraint="$1"
+  local dl_json="$2"
+  jq_parsed="$(echo "$dl_json" | jq -r '.[].version' | sed 's/^go//g')"
+
+  if got="$(select_go_version "$constraint" "$jq_parsed")"; then
+    echo "$got" && return
+  fi
+  echo "$jq_parsed" | ./src/semver-select -c "$GO_VERSION_CONSTRAINT" -n 1 -i -
+}

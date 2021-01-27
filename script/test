@@ -4,10 +4,13 @@ set -e
 
 CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
-pattern="*_test.sh"
-
-if [ -n "$1" ]; then
-  pattern="$1"
+if [ "$1" = "-long" ]; then
+  for f in ./src/*_test_long.*; do
+    "$f"
+  done
+  exit
 fi
 
-find ./src -name "$pattern" -exec {} \;
+for f in ./src/*_test.*; do
+  "$f"
+done

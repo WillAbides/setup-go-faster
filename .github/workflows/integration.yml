@@ -77,3 +77,17 @@ jobs:
           [[ "$(go version)" == *"1.15.5"* ]]
           [[ '${{steps.setup_go_1_15_5_again.outputs.GOROOT}}' == *"1.15.5"* ]]
           [[ '${{steps.setup_go_1_15_5_again.outputs.GOTOOLDIR}}' == *"1.15.5"* ]]
+      - id: setup_go_1_13_x
+        name: install 1.13.x
+        uses: ./
+        with:
+          go-version: '1.13.x'
+          ignore-local: true
+      - name: outputs
+        run: |
+          echo '${{ toJson( steps.setup_go_1_13_x.outputs ) }}' | jq .
+          go version
+          set -ex
+          [[ "$(go version)" == *"1.13"* ]]
+          [[ '${{steps.setup_go_1_13_x.outputs.GOROOT}}' == *"1.13"* ]]
+          [[ '${{steps.setup_go_1_13_x.outputs.GOTOOLDIR}}' == *"1.13"* ]]
