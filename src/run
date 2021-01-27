@@ -36,19 +36,19 @@ if [ -z "$IGNORE_LOCAL_GO" ]; then
   target_dir="$install_parent/$lv/x64"
 fi
 
-if [ -z "$IGNORE_LOCAL_GO" ] && [ -z "$target_dir" ]; then
+if [ -z "$IGNORE_LOCAL_GO" ] && [ -z "$lv" ]; then
   lv="$(select_local_version "$constraint" "$go_tool_cache")"
   target_dir="$go_tool_cache/$lv/x64"
 fi
 
-if [ -z "$target_dir" ]; then
+if [ -z "$lv" ]; then
   if is_precise_version "$constraint"; then
     lv="$constraint"
     target_dir="$install_parent/$lv/x64"
   fi
 fi
 
-if [ -z "$target_dir" ]; then
+if [ -z "$lv" ]; then
   if [ -z "$dl_json" ]; then
     dl_json="$(curl --retry 4 -s --fail 'https://golang.org/dl/?mode=json&include=all')"
   fi
