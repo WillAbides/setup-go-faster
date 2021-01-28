@@ -4,16 +4,29 @@ It's like actions/setup-go but faster.
 
 ### Faster
 
-On Ubuntu runners, setup-go-faster typically takes about 4s vs 10s for setup-go. This is difficult to benchmark on MacOS
-and Windows because the action runners are inconsistent from one run to another.
+Setup-go-faster takes about a third as long as setup-go to install go on a runner.
+
+These are the median times for installing go 1.15.1.
+
+| runner os    | setup-go | setup-go-faster | improvement |
+|--------------|---------:|----------------:|------------:|
+| ubuntu-18.04 |      11s |              4s |          7s |
+| macos-10.15  |      20s |              7s |         13s |
+| windows-2019 |      55s |             18s |         37s |
 
 When using a pre-installed version of go, setup-go-faster will be done less than a second vs 1-2 seconds for setup-go.
 
-The performance improvement is achieved by using simple bash scripts instead of nodejs meaning there is less overhead
-to deal with. It is also smart about skipping constraint checks when "go-version" isn't a constraint.
+The performance improvements are achieved by:
 
-The exception to the bash-only rule is setup-go-faster downloads and runs https://github.com/WillAbides/semver-select
-to evaluate some version constraints. This takes about 700-1000ms and only affects workflows that use semver constraints.
+- The magic of Bash, curl and Perl. Maybe they aren't the most modern, but they are a heck of a lock faster than loading
+  nodejs to do some simple version checks and downloads.
+
+- Installing to the faster volume on Windows. On windows runners it takes significantly longer to write to `C:` vs
+  `D:`. Setup-go installs go to `C:`, but setup-go-faster installs to `D:`
+
+- Shortcuts for version checks. Setup-go-faster supports all the same pseudo-semver ranges as setup-go, but it is
+  optimized for exact versions (like `1.15.7`) and `1.15.x` style ranges. Our version check is faster to begin with, but
+  if you use one of those formats you can shave an additional half second off the time.
 
 ### Install tip
 
@@ -32,8 +45,8 @@ setup-go-faster\'s output instead of having to add another step just to set an e
 
 ### What\'s missing?
 
-Just the `stable` input. I don\'t understand what `stable` adds for actions/setup-go. If you only want stable builds
-you can set go-version accordingly. If there is good use case for `stable`, it can be added.
+Just the `stable` input. I don\'t understand what `stable` adds for actions/setup-go. If you only want stable builds you
+can set go-version accordingly. If there is good use case for `stable`, it can be added.
 
 ## Inputs
 
