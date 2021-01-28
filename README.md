@@ -19,7 +19,7 @@ These are the median times for installing go 1.15.1 and tip.
 
 The performance improvements are achieved by:
 
-- The magic of Bash, curl and Perl. Maybe they aren't the most modern, but they are a heck of a lock faster than loading
+- The magic of Bash, curl and Perl. Maybe they aren't the most modern, but they are a heck of a lot faster than loading
   nodejs to do some simple version checks and downloads.
 
 - Installing to the faster volume on Windows. On windows runners it takes significantly longer to write to `C:` vs
@@ -32,12 +32,6 @@ The performance improvements are achieved by:
 ### Install tip
 
 Setup-go-faster will install go tip from source if you set `go-version: tip`.
-
-### New versions available immediately
-
-No need to wait around for another repo to merge a PR when a new version of go is released. Setup-go-faster gets
-available versions directly from https://golang.org/dl. As soon as a release is available there, it\'s available to your
-workflow.
 
 ### Check out the outputs
 
