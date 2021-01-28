@@ -6,15 +6,16 @@ It's like actions/setup-go but faster.
 
 Setup-go-faster takes about a third as long as setup-go to install go on a runner.
 
-These are the median times for installing go 1.15.1.
+These are the median times for installing go 1.15.1 and tip.
 
-| runner os    | setup-go | setup-go-faster | improvement |
-|--------------|---------:|----------------:|------------:|
-| ubuntu-18.04 |      11s |              4s |          7s |
-| macos-10.15  |      20s |              7s |         13s |
-| windows-2019 |      55s |             18s |         37s |
-
-When using a pre-installed version of go, setup-go-faster will be done less than a second vs 1-2 seconds for setup-go.
+| runner os    | go-version |    setup-go | setup-go-faster | improvement |
+|--------------|------------|------------:|----------------:|------------:|
+| ubuntu-18.04 | 1.15.1     |         11s |              4s |          7s |
+| macos-10.15  | 1.15.1     |         20s |              7s |         13s |
+| windows-2019 | 1.15.1     |         55s |             18s |         37s |
+| ubuntu-18.04 | tip        | unsupported |            136s |           ∞ |
+| macos-10.15  | tip        | unsupported |            179s |           ∞ |
+| windows-2019 | tip        | unsupported |            260s |           ∞ |
 
 The performance improvements are achieved by:
 
