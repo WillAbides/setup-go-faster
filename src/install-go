@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # required global vars:
-# INSTALL_GO_VERSION=1.2.3  # the version of go to install
 # RUNNER_TOOL_CACHE         # provided by action
 #
 # optional vars:
@@ -14,21 +13,14 @@ CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
 . src/lib
 
+install_go_version="$1"
+target_dir="$2"
+tip_target_dir="$3"
+
 debug_out starting install-go
-
-debug_out "INSTALL_GO_VERSION is $INSTALL_GO_VERSION"
-
-if [ -z "$INSTALL_GO_VERSION" ]; then
-  echo "INSTALL_GO_VERSION is required"
-  exit 1
-fi
 
 export GOROOT=""
 export GO111MODULE=off
-
-target_dir="$RUNNER_TOOL_CACHE/go/$INSTALL_GO_VERSION/x64"
-
-tip_target_dir="$RUNNER_TOOL_CACHE/go/tip/x64"
 
 if [ -d "$target_dir" ]; then
   echo "$target_dir" already exists
@@ -37,7 +29,7 @@ if [ -d "$target_dir" ]; then
   fi
 fi
 
-[ -n "$skip_install" ] || install_go "$INSTALL_GO_VERSION" "$target_dir"
+[ -n "$skip_install" ] || install_go "$install_go_version" "$target_dir"
 
 GITHUB_ENV="${GITHUB_ENV:-/dev/null}"
 GITHUB_PATH="${GITHUB_PATH:-/dev/null}"

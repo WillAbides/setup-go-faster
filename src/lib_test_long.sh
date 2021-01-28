@@ -10,8 +10,10 @@ setUp() {
 
 test_install_go() {
   (
-    export RUNNER_TEMP="$SHUNIT_TMPDIR/test_install_go/runner_temp"
-    target="$SHUNIT_TMPDIR/test_install_go/go_target"
+    tmpspace="${RUNNER_TEMP:-"$SHUNIT_TMPDIR/test_install_go"}"
+    RUNNER_TEMP="${RUNNER_TEMP:-"$tmpspace/runner_temp"}"
+    export RUNNER_TEMP
+    target="$tmpspace/go_target"
     version="1.15.4"
     install_go "$version" "$target"
     got_version="$("$target/bin/go" version)"
