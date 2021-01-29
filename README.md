@@ -43,6 +43,8 @@ setup-go-faster\'s output instead of having to add another step just to set an e
 Just the `stable` input. I don\'t understand what `stable` adds for actions/setup-go. If you only want stable builds you
 can set go-version accordingly. If there is good use case for `stable`, it can be added.
 
+<!--- start generated --->
+
 ## Inputs
 
 ### go-version
@@ -114,3 +116,4 @@ output of `go env GOROOT`
 ### GOTOOLDIR
 
 output of `go env GOTOOLDIR`
+<!--- end generated --->

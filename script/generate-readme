@@ -1,9 +1,24 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
 CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
-script/action-doc action.yml \
- --post-description-text "$(cat ./_doc/readme_post_description.md)" \
- >./README.md
+gen_pattern="<!--- start generated --->*<!--- end generated --->"
+
+gen_sub="$(
+  cat <<EOF
+<!--- start generated --->
+$(
+    script/action-doc \
+      --skip-action-name \
+      --skip-action-description \
+      --header-prefix='#'\
+      action.yml
+  )
+<!--- end generated --->
+EOF
+)"
+
+readme="$(cat README.md)"
+echo "${readme//$gen_pattern/$gen_sub}" >README.md
