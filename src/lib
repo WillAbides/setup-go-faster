@@ -134,12 +134,15 @@ select_local_version() {
   local local_versions
   local_versions="$(ls "$go_tool_cache")"
 
-  # return any exact matches first for fastest possible result
-  for v in $local_versions; do
-    if [ "$v" = "$constraint" ]; then
-      echo "$v" && return
-    fi
-  done
+  # if this is a plain version instead of a constraint, only an exact match will work
+  if is_precise_version "$constraint"; then
+    for v in $local_versions; do
+      if [ "$v" = "$constraint" ]; then
+        echo "$v" && return
+      fi
+    done
+    return
+  fi
 
   # handle the 1.x type constraint
   if ver="$(select_go_version "$constraint" "$local_versions")"; then
@@ -163,5 +166,11 @@ select_remote_version() {
   if got="$(select_go_version "$constraint" "$jq_parsed")"; then
     echo "$got" && return
   fi
+
+  # don't try semver-select on a precise version
+  if is_precise_version "$constraint"; then
+    return
+  fi
+
   echo "$jq_parsed" | ./src/semver-select -c "$GO_VERSION_CONSTRAINT" -n 1 -i -
 }
