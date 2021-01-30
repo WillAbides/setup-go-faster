@@ -55,6 +55,23 @@ jobs:
           [[ "$(go version)" == *"1.15.5"* ]]
           [[ '${{steps.setup_go_1_15_5.outputs.GOROOT}}' == *"1.15.5"* ]]
           [[ '${{steps.setup_go_1_15_5.outputs.GOTOOLDIR}}' == *"1.15.5"* ]]
+
+
+      - id: setup_go_1_16rc1
+        name: install 1.16rc1
+        uses: ./
+        with:
+          go-version: '1.16rc1'
+      - name: outputs
+        run: |
+          echo '${{ toJson( steps.setup_go_1_16rc1.outputs ) }}' | jq .
+          go version
+          set -ex
+          [[ "$(go version)" == *"1.16rc1"* ]]
+          [[ '${{steps.setup_go_1_16rc1.outputs.GOROOT}}' == *"16rc1"* ]]
+          [[ '${{steps.setup_go_1_16rc1.outputs.GOTOOLDIR}}' == *"16rc1"* ]]
+
+
       - id: setup_go_all
         name: install '*'
         uses: ./
@@ -64,6 +81,8 @@ jobs:
         run: |
           echo '${{ toJson( steps.setup_go_all.outputs ) }}' | jq .
           go version
+
+
       - id: setup_go_1_15_5_again
         name: install 1.15.5 again
         uses: ./
@@ -77,6 +96,8 @@ jobs:
           [[ "$(go version)" == *"1.15.5"* ]]
           [[ '${{steps.setup_go_1_15_5_again.outputs.GOROOT}}' == *"1.15.5"* ]]
           [[ '${{steps.setup_go_1_15_5_again.outputs.GOTOOLDIR}}' == *"1.15.5"* ]]
+
+
       - id: setup_go_1_13_x
         name: install 1.13.x
         uses: ./

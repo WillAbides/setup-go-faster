@@ -39,6 +39,7 @@ test_is_precise_version() {
 1.1.1
 9999.9999.9999
 1.15beta1
+1.16rc1
   '
 
   for v in $versions; do
