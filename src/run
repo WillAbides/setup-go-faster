@@ -49,10 +49,8 @@ if [ -z "$lv" ]; then
 fi
 
 if [ -z "$lv" ]; then
-  if [ -z "$dl_json" ]; then
-    dl_json="$(curl --retry 4 -s --fail 'https://golang.org/dl/?mode=json&include=all')"
-  fi
-  lv="$(select_remote_version "$constraint" "$dl_json")"
+  known_versions="$(curl --retry 4 -s --fail 'https://raw.githubusercontent.com/WillAbides/goreleases/main/versions.txt')"
+  lv="$(select_remote_version "$constraint" "$known_versions")"
   target_dir="$install_parent/$lv/x64"
 fi
 

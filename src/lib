@@ -160,10 +160,11 @@ select_local_version() {
 
 select_remote_version() {
   local constraint="$1"
-  local dl_json="$2"
-  jq_parsed="$(echo "$dl_json" | jq -r '.[].version' | sed 's/^go//g')"
+  local versions="$2"
+  # shellcheck disable=SC2001
+  versions="$(echo "$versions"| sed 's/^go//g')"
 
-  if got="$(select_go_version "$constraint" "$jq_parsed")"; then
+  if got="$(select_go_version "$constraint" "$versions")"; then
     echo "$got" && return
   fi
 
@@ -172,5 +173,5 @@ select_remote_version() {
     return
   fi
 
-  echo "$jq_parsed" | ./src/semver-select -c "$GO_VERSION_CONSTRAINT" -n 1 -i -
+  echo "$versions" | ./src/semver-select -c "$constraint" -n 1 -i -
 }
