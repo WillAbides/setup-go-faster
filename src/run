@@ -2,10 +2,11 @@
 
 # required global vars:
 # RUNNER_TOOL_CACHE         # provided by action
-# GO_VERSION= version constraint
+# RUNNER_WORKSPACE          # provided by action
+# GO_VERSION=               # version constraint
 #
 # optional vars:
-# INSTALL_GO_FORCE                                     # set to non-empty to force the install
+# INSTALL_GO_FORCE          # set to non-empty to force the install
 
 set -e
 [ -n "$DEBUG" ] && set -x
@@ -13,6 +14,8 @@ set -e
 CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
 . src/lib
+
+run_install_go_fn="${run_install_go_fn:-"run_install_go"}"
 
 debug_out starting run
 
@@ -31,27 +34,17 @@ mkdir -p "$install_parent"
 go_tool_cache="$RUNNER_TOOL_CACHE/go"
 mkdir -p "$go_tool_cache"
 
+all_locals=""
+
 if [ -z "$IGNORE_LOCAL_GO" ]; then
-  lv="$(select_local_version "$constraint" "$install_parent")"
-  target_dir="$install_parent/$lv/x64"
+  all_locals="$(ls "$go_tool_cache")
+$(ls "$install_parent")"
 fi
 
-if [ -z "$IGNORE_LOCAL_GO" ] && [ -z "$lv" ]; then
-  lv="$(select_local_version "$constraint" "$go_tool_cache")"
-  target_dir="$go_tool_cache/$lv/x64"
-fi
-
-if [ -z "$lv" ]; then
-  if is_precise_version "$constraint"; then
-    lv="$constraint"
-    target_dir="$install_parent/$lv/x64"
-  fi
-fi
-
-if [ -z "$lv" ]; then
-  known_versions="$(curl --retry 4 -s --fail 'https://raw.githubusercontent.com/WillAbides/goreleases/main/versions.txt')"
-  lv="$(select_remote_version "$constraint" "$known_versions")"
-  target_dir="$install_parent/$lv/x64"
+if is_precise_version "$constraint"; then
+  lv="$constraint"
+else
+  lv="$(select_go_version "$constraint" "$all_locals")"
 fi
 
 if [ -z "$lv" ]; then
@@ -59,4 +52,10 @@ if [ -z "$lv" ]; then
   exit 1
 fi
 
-src/install-go "$lv" "$target_dir" "$install_parent/tip/x64"
+if [ -z "$IGNORE_LOCAL_GO" ] && [ -d "$go_tool_cache/$lv/x64" ]; then
+  target_dir="$go_tool_cache/$lv/x64"
+else
+  target_dir="$install_parent/$lv/x64"
+fi
+
+"$run_install_go_fn" "$lv" "$target_dir" "$install_parent/tip/x64"

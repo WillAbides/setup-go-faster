@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # required global vars:
-# RUNNER_TOOL_CACHE         # provided by action
 #
 # optional vars:
 # INSTALL_GO_FORCE                                     # set to non-empty to force the install
