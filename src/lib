@@ -69,6 +69,11 @@ download_go_url() {
   echo "https://storage.googleapis.com/golang/$archive_name"
 }
 
+# just a helper func to call src/install-go that can be overridden for testing
+run_install_go() {
+  src/install-go "$@"
+}
+
 install_go() {
   local go_version="$1"
   local target_dir="$2"
@@ -123,55 +128,32 @@ is_precise_version() {
 select_go_version() {
   local constraint="$1"
   local versions="$2"
-  local got
-  got="$(echo "$versions" | ./src/select_go_version.pl "$constraint")" || return
-  echo "$got"
+  gvs_result="$(call_goversion_select "$constraint" "$versions")"
+  body="$(echo "$gvs_result" | jq -r '.body')"
+  status_code="$(echo "$gvs_result" | jq -r '.status_code')"
+  if [ "$status_code" != "200" ]; then
+    return 1
+  fi
+  # remove the go prefix
+  ver="${body#"go"}"
+  echo "$ver"
 }
 
-select_local_version() {
-  local constraint="$1"
-  local go_tool_cache="$2"
-  local local_versions
-  local_versions="$(ls "$go_tool_cache")"
-
-  # if this is a plain version instead of a constraint, only an exact match will work
-  if is_precise_version "$constraint"; then
-    for v in $local_versions; do
-      if [ "$v" = "$constraint" ]; then
-        echo "$v" && return
-      fi
-    done
-    return
-  fi
-
-  # handle the 1.x type constraint
-  if ver="$(select_go_version "$constraint" "$local_versions")"; then
-    if [ -n "$ver" ]; then
-      echo "$ver" && return
-    fi
-  fi
-
-  # handle other constraints
-  local_matches="$(echo "$local_versions" | ./src/semver-select -c "$constraint" -n 1 -i -)"
-  if [ -n "$local_matches" ]; then
-    echo "$local_matches" | tail -1
-  fi
-}
-
-select_remote_version() {
+call_goversion_select() {
   local constraint="$1"
   local versions="$2"
-  # shellcheck disable=SC2001
-  versions="$(echo "$versions"| sed 's/^go//g')"
+  versions="$(echo "$versions" | tr '\n' ',' | sed 's/,*$//g')"
 
-  if got="$(select_go_version "$constraint" "$versions")"; then
-    echo "$got" && return
-  fi
-
-  # don't try semver-select on a precise version
-  if is_precise_version "$constraint"; then
-    return
-  fi
-
-  echo "$versions" | ./src/semver-select -c "$constraint" -n 1 -i -
+  url="https://willabides.azurewebsites.net/api/goversion_select"
+  resp="$(curl --retry 4 -s -G \
+    --data-urlencode "constraint=$constraint" \
+    --data-urlencode "candidates=$versions" \
+    "$url" -w "\n%{http_code}")"
+  body="$(echo "$resp" | head -1)"
+  status_code="$(echo "$resp" | tail -1)"
+  jq -n --arg body "$body" --arg status_code "$status_code" \
+    '{
+       "body": $body,
+       "status_code": $status_code
+      }'
 }

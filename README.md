@@ -19,14 +19,13 @@ These are the median times for installing go 1.15.1 and tip.
 
 The performance improvements are achieved by:
 
-- The magic of Bash, curl and Perl. Maybe they aren't the most modern, but they are a heck of a lot faster than loading
-  nodejs to do some simple version checks and downloads.
+- Using a simple, composite action instead of loading nodejs.
 
 - Installing to the faster volume on Windows. On windows runners it takes significantly longer to write to `C:` vs
   `D:`. Setup-go installs go to `C:`, but setup-go-faster installs to `D:`
 
 - Shortcuts for version checks. Setup-go-faster supports all the same pseudo-semver ranges as setup-go, but it is
-  optimized for exact versions (like `1.15.7`) and `1.15.x` style ranges. Our version check is faster to begin with, but
+  optimized for exact versions (like `1.15.7`). Our version check is faster to begin with, but
   if you use one of those formats you can shave an additional half second off the time.
 
 ### Install tip
@@ -51,8 +50,8 @@ can set go-version accordingly. If there is good use case for `stable`, it can b
 
 __Required__
 
-The version of go to install. It can be an exact version or a semver constraint like '1.14.x' or '^1.14.4'.
-Do not add "go" or "v" to the beginning of the version.
+The version of go to install. It can be an exact version or a semver constraint like `1.14.x` or `^1.14.4`.
+Do not add `go` or `v` to the beginning of the version.
 
 Action runners come with some versions of go pre-installed. If any of those versions meet your semver constraint
 setup-go-faster will use those instead of checking whether a newer go available for download that meets your
@@ -63,27 +62,26 @@ warned there is nothing fast about this. It takes between 3 and 5 minutes on Ubu
 on Windows and MacOS runners.
 
 Go versions aren't really semvers, but they are close enough to use semver constraints for the most part.
-There are a some gotchas to watch out for:
+You do need to remember that go doesn't release .0 versions (the first 1.15.x release is 1.15, not 1.15.0).
+This means if you have set go-version to 1.15, when 1.15.1 is released it won't be used because 1.15 is an
+exact match. If you want any go in the 1.15 family, set go-version to `1.15.x`.
 
-- Go doesn't release .0 versions. The first 1.15.x releas is 1.15, not 1.15.0. This means if you have set
-  go-version to 1.15, when 1.15.1 is released it won't be used because 1.15 is an exact match. If you want
-  any go in the 1.15 family, set go-version to `1.15.x`
+Prereleases are specified by alphanumeric strings immediately after the minor version (like 1.16beta1). You can
+the newest 1.16 including prereleases with `~ 1.16a` because all prereleases will be greater than `a`.
 
-- Go's pre-releases are not valid semver. For example the beta for 1.16 is 1.16beta1. This means pre-releases
-  need to be explicitely specified.
-
-For those who learn best from examples:
+Examples:
 
 | go-version         | description                                                                                    |
 |--------------------|------------------------------------------------------------------------------------------------|
+| 1.x                | installs the newest go 1 that isn't a prerelease                                               |
+| 1.xa               | installs the newest go 1 including prereleases                                                 |
 | 1.15.6             | installs 1.15.6                                                                                |
 | 1.15beta1          | installs 1.15beta1                                                                             |
 | 1.15.x             | installs the newest go that starts with 1.15                                                   |
 | 1.15               | installs go 1.15, nothing newer. You generally do not want this and should use 1.15.x instead. |
-| *                  | installs the newest go without any other constraints                                           |
 | ^1.15.4            | installs a go that is >= 1.15.4 and < 2                                                        |
 | ~1.15.4            | installs a go that is >= 1.15.4 and < 1.16                                                     |
-| < 1.15.6 >= 1.15.4 | installs a go that is >= 1.15.4 and < 1.15.6                                                   |
+| >= 1.15.4 < 1.15.6 | installs a go that is >= 1.15.4 and < 1.15.6                                                   |
 | tip                | installs gotip  from source                                                                    |
 
 
@@ -93,6 +91,12 @@ Normally a pre-installed version of go that meets the go-version constraints wil
 of checking whether a newer version is available for download. With ignore-local, the
 action will always check for a newer version available for download. Set this to any non-empty value
 to enable.
+
+
+### debug
+
+Set to anything but empty to add debugging information to the logs. It's very noisy and is primarily just
+adds 'set -x'.
 
 
 ## Outputs

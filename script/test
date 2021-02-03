@@ -5,12 +5,12 @@ set -e
 CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 
 if [ "$1" = "-long" ]; then
-  for f in ./src/*_test_long.*; do
+  for f in ./src/*_test_long.sh; do
     "$f"
   done
   exit
 fi
 
-for f in ./src/*_test.*; do
+for f in ./src/*_test.sh; do
   "$f"
 done
