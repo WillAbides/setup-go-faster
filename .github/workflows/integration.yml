@@ -22,6 +22,10 @@ jobs:
           go-version: tip
       - name: outputs
         run: |
+          echo '*********** env ************'
+          env
+          echo '*********** go env ***********'
+          go env
           echo '${{ toJson( steps.setup_go.outputs ) }}' | jq .
           go version
           set -ex
@@ -49,6 +53,10 @@ jobs:
           go-version: '1.15.5'
       - name: outputs
         run: |
+          echo '*********** env ************'
+          env
+          echo '*********** go env ***********'
+          go env
           echo '${{ toJson( steps.setup_go_1_15_5.outputs ) }}' | jq .
           go version
           set -ex
@@ -64,6 +72,10 @@ jobs:
           go-version: '1.16rc1'
       - name: outputs
         run: |
+          echo '*********** env ************'
+          env
+          echo '*********** go env ***********'
+          go env
           echo '${{ toJson( steps.setup_go_1_16rc1.outputs ) }}' | jq .
           go version
           set -ex
@@ -79,6 +91,10 @@ jobs:
           go-version: '*'
       - name: outputs
         run: |
+          echo '*********** env ************'
+          env
+          echo '*********** go env ***********'
+          go env
           echo '${{ toJson( steps.setup_go_all.outputs ) }}' | jq .
           go version
 
@@ -90,6 +106,10 @@ jobs:
           go-version: '1.15.x <1.15.6'
       - name: outputs
         run: |
+          echo '*********** env ************'
+          env
+          echo '*********** go env ***********'
+          go env
           echo '${{ toJson( steps.setup_go_1_15_5_again.outputs ) }}' | jq .
           go version
           set -ex
@@ -106,6 +126,10 @@ jobs:
           ignore-local: true
       - name: outputs
         run: |
+          echo '*********** env ************'
+          env
+          echo '*********** go env ***********'
+          go env
           echo '${{ toJson( steps.setup_go_1_13_x.outputs ) }}' | jq .
           go version
           set -ex

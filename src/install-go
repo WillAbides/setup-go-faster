@@ -44,7 +44,6 @@ add_to_github_path "$gopath/bin"
 PATH="$(add_to_system_path "$gopath/bin")"
 
 unset GOROOT
-echo "GOROOT=" >>"$GITHUB_ENV"
 
 if [ -n "$INSTALL_GO_TIP" ]; then
   GO111MODULE=off go get golang.org/dl/gotip
@@ -62,6 +61,8 @@ GOMODCACHE
 GOPATH
 GOROOT
 GOTOOLDIR'
+
+echo "GOROOT=$(go env GOROOT)" >>"$GITHUB_ENV"
 
 for var in $govars; do
   echo "::set-output name=$var::$(go env "$var")"
