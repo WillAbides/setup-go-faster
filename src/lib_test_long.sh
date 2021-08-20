@@ -14,10 +14,10 @@ test_install_go() {
     RUNNER_TEMP="${RUNNER_TEMP:-"$tmpspace/runner_temp"}"
     export RUNNER_TEMP
     target="$tmpspace/go_target"
-    version="1.15.4"
+    version="1.16.x"
     install_go "$version" "$target"
     got_version="$("$target/bin/go" version)"
-    assertEquals "go version go1.15.4 $(goos)/amd64" "$got_version"
+    assertEquals "go version go1.17 $(goos)/amd64" "$got_version"
   )
 }
 

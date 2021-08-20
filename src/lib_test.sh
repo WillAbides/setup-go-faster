@@ -88,10 +88,12 @@ test_select_go_version() {
   do_test_select_go_version "" "x" "1.14beta1"
   do_test_select_go_version "0" "x" "0"
   do_test_select_go_version "" "1.2.3"
+  do_test_select_go_version "1.16" "1.16.x" "1.15.4" "1.16rc1" "1.16"
 }
 
 test_select_remote_version() {
-  versions='1.15.7
+  # shellcheck disable=SC2034
+  versions_1='1.15.7
 1.15.6
 1.14.3
 1.15.6
@@ -118,20 +120,54 @@ test_select_remote_version() {
 1.16beta1
 1.16rc1'
 
-  tests='*;1.15.7
-1.17.x;
-1.16.x;
-1.15;1.15
-1.15.x;1.15.7
-^1;1.15.7
-^1.15.999;
-1.13.x;1.13.3
-1.16beta1;1.16beta1
-x;1.15.7'
+  # shellcheck disable=SC2034
+  versions_2='1.15.7
+1.15.6
+1.14.3
+1.15.6
+1.15.5
+1.15.4
+1.15.3
+1.15.2
+1.15.1
+1.15
+1.14.3
+1.14.2
+1.14.1
+1.14
+1.13.3
+1.13.2
+1.13.1
+1.13
+1.3.3
+1.3.2
+1.3.1
+1.3
+1.2.2
+1
+1.17
+1.17rc1'
+
+  tests='versions_1;*;1.15.7
+versions_1;1.17.x;
+versions_1;1.16.x;
+versions_1;1.15;1.15
+versions_1;1.15.x;1.15.7
+versions_1;^1;1.15.7
+versions_1;^1.15.999;
+versions_1;1.13.x;1.13.3
+versions_1;1.16beta1;1.16beta1
+versions_1;x;1.15.7
+versions_2;x;1.17
+versions_2;1.x;1.17
+versions_2;1.17.x;1.17
+versions_2;1.17;1.17'
 
   for td in $tests; do
-    input="$(echo "$td" | cut -d ';' -f1)"
-    want="$(echo "$td" | cut -d ';' -f2)"
+    versions_var="$(echo "$td" | cut -d ';' -f1)"
+    input="$(echo "$td" | cut -d ';' -f2)"
+    want="$(echo "$td" | cut -d ';' -f3)"
+    versions="${!versions_var}"
     got="$(select_remote_version "$input" "$versions")"
     assertEquals "failed on input '$input'" "$want" "$got"
   done
