@@ -103,9 +103,6 @@ add_to_system_path() {
 
 add_to_github_path() {
   element="$1"
-  if [ "$(goos)" == "windows" ]; then
-    element="$(echo "/$element" | sed -e 's|\\|/|g' | sed 's/://')"
-  fi
   echo "$element" >>"$GITHUB_PATH"
 }
 
