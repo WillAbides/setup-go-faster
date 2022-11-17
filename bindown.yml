@@ -52,6 +52,14 @@ templates:
       dependency:
         vars:
           archivepathsuffix: .exe
+    - matcher:
+        arch:
+        - arm64
+        os:
+        - darwin
+      dependency:
+        vars:
+          arch: amd64
     substitutions:
       arch:
         "386": i386
@@ -63,6 +71,7 @@ templates:
     systems:
     - darwin/386
     - darwin/amd64
+    - darwin/arm64
     - linux/386
     - linux/amd64
     - windows/386
