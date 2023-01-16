@@ -8,7 +8,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
       - run: script/bootstrap
       - run: script/generate --check
       - run: script/lint
@@ -28,7 +28,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
       - run: script/bootstrap
       - run: script/test
       - run: script/test -long
