@@ -14,7 +14,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
       - id: setup_go
         name: install tip
         uses: ./
@@ -46,7 +46,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.3.0
       - id: setup_go_1_15_5
         name: install 1.15.5
         uses: ./
