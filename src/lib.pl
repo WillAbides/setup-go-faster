@@ -72,6 +72,14 @@ sub go_version_string {
     my $major_v = $$v{"major"};
     my $minor_v = $$v{"minor"};
     my $patch_v = $$v{"patch"};
+
+    # For 1.21 and above with no pre-release, always return major.minor.patch
+    if ( $major_v > 1 || ( $major_v == 1 && $minor_v >= 21 ) ) {
+        if ( $$v{"pre_release"} eq "" ) {
+            return "$major_v.$minor_v.$patch_v";
+        }
+    }
+
     $patch_v = "" if $patch_v == 0;
     $minor_v = "" if $minor_v == 0 && $patch_v eq "";
     my $st = "$$v{'major'}";
