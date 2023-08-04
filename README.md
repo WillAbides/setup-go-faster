@@ -72,9 +72,10 @@ on Windows and MacOS runners.
 Go versions aren't really semvers, but they are close enough to use semver constraints for the most part.
 There are a some gotchas to watch out for:
 
-- Go doesn't release .0 versions[^dot-zero-note]. The first 1.15.x releas is 1.15, not 1.15.0. This means if you have set
-  go-version to 1.15, when 1.15.1 is released it won't be used because 1.15 is an exact match. If you want
-  any go in the 1.15 family, set go-version to `1.15.x`
+- Prior to go1.21, Go doesn't release .0 versions. The first 1.15.x release is 1.15, not 1.15.0. This means if you 
+  have set go-version to 1.15, when 1.15.1 is released it won't be used because 1.15 is an exact match. If you
+  want any go in the 1.15 family, set go-version to `1.15.x`. For consistency, setup-go-faster@v1 continues to
+  handle constraints for post 1.21 the same as pre 1.21. This may change in a future major version.
 
 - Go's pre-releases are not valid semver. For example the beta for 1.16 is 1.16beta1. This means pre-releases
   need to be explicitely specified.
@@ -125,15 +126,9 @@ output of `go env GOROOT`
 output of `go env GOTOOLDIR`
 <!--- end generated --->
 
-[^dot-zero-note] This changes with go1.21. Starting with go1.21, the first
-release in a release family will be styled go1.N.0 instead of go1.N. For
-consistency, setup-go-faster@v1 will not change semver constraints to match
-this.
-
 [^perf-note]: These results come
 from [speedrun](https://github.com/WillAbides/test-setup-go-faster/blob/main/.github/workflows/speedrun.yml)
 and [speedrun-tip](https://github.com/WillAbides/test-setup-go-faster/blob/main/.github/workflows/speedrun-tip.yml)
 from
 the [WillAbides/test-setup-go-faster](https://github.com/WillAbides/test-setup-go-faster)
 repo.
-
