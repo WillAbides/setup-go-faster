@@ -6,16 +6,16 @@ It's like actions/setup-go but faster.
 
 Setup-go-faster takes about a third as long as setup-go to install go on a runner.
 
-These are the median times for installing go 1.15.1 and tip.
+These are the median times[^1] for installing go 1.20.7 and tip.
 
 | runner os    | go-version |    setup-go | setup-go-faster | improvement |
 |--------------|------------|------------:|----------------:|------------:|
-| ubuntu-18.04 | 1.15.1     |         11s |              4s |          7s |
-| macos-10.15  | 1.15.1     |         20s |              7s |         13s |
-| windows-2019 | 1.15.1     |         55s |             18s |         37s |
-| ubuntu-18.04 | tip        | unsupported |            136s |           ∞ |
-| macos-10.15  | tip        | unsupported |            179s |           ∞ |
-| windows-2019 | tip        | unsupported |            260s |           ∞ |
+| ubuntu-20.04 | 1.20.7     |          8s |              3s |          5s |
+| macos-11     | 1.20.7     |         34s |             12s |         22s |
+| windows-2022 | 1.20.7     |         80s |             12s |         68s |
+| ubuntu20.04  | tip        | unsupported |            311s |           ∞ |
+| macos-11     | tip        | unsupported |            313s |           ∞ |
+| windows-2022 | tip        | unsupported |            576s |           ∞ |
 
 The performance improvements are achieved by:
 
@@ -117,3 +117,12 @@ output of `go env GOROOT`
 
 output of `go env GOTOOLDIR`
 <!--- end generated --->
+
+---
+
+[^1]: These results come
+from [speedrun](https://github.com/WillAbides/test-setup-go-faster/blob/main/.github/workflows/speedrun.yml)
+and [speedrun-tip](https://github.com/WillAbides/test-setup-go-faster/blob/main/.github/workflows/speedrun-tip.yml)
+from
+the [WillAbides/test-setup-go-faster](https://github.com/WillAbides/test-setup-go-faster)
+repo.
