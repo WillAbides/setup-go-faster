@@ -7,7 +7,8 @@ It's like actions/setup-go but faster.
 Setup-go-faster takes about a third as long as setup-go to install go on a
 runner.
 
-These are the median times[^perf-note] for installing go 1.20.7 and tip.
+These are the median times[^perf-note] for installing go 1.20.7 and tip as of
+August 2023.
 
 | runner os    | go-version |    setup-go | setup-go-faster | improvement |
 |--------------|------------|------------:|----------------:|------------:|
