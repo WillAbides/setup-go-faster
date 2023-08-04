@@ -7,7 +7,7 @@ It's like actions/setup-go but faster.
 Setup-go-faster takes about a third as long as setup-go to install go on a
 runner.
 
-These are the median times[^1] for installing go 1.20.7 and tip.
+These are the median times[^perf-note] for installing go 1.20.7 and tip.
 
 | runner os    | go-version |    setup-go | setup-go-faster | improvement |
 |--------------|------------|------------:|----------------:|------------:|
@@ -58,30 +58,27 @@ accordingly. If there is good use case for `stable`, it can be added.
 
 __Required__
 
-The version of go to install. It can be an exact version or a semver constraint
-like '1.14.x' or '^1.14.4'. Do not add "go" or "v" to the beginning of the
-version.
+The version of go to install. It can be an exact version or a semver constraint like '1.14.x' or '^1.14.4'.
+Do not add "go" or "v" to the beginning of the version.
 
-Action runners come with some versions of go pre-installed. If any of those
-versions meet your semver constraint setup-go-faster will use those instead of
-checking whether a newer go available for download that meets your constraint.
-You can change this with the `ignore-local` input below.
+Action runners come with some versions of go pre-installed. If any of those versions meet your semver constraint
+setup-go-faster will use those instead of checking whether a newer go available for download that meets your
+constraint. You can change this with the `ignore-local` input below.
 
-A special case value for go-version is `tip` which causes setup-go-faster to
-install the gotip from source. Be warned there is nothing fast about this. It
-takes between 3 and 5 minutes on Ubuntu runners and is even slower on Windows
-and MacOS runners.
+A special case value for go-version is `tip` which causes setup-go-faster to install the gotip from source. Be
+warned there is nothing fast about this. It takes between 3 and 5 minutes on Ubuntu runners and is even slower
+on Windows and MacOS runners.
 
-Go versions aren't really semvers, but they are close enough to use semver
-constraints for the most part. There are a some gotchas to watch out for:
+Go versions aren't really semvers, but they are close enough to use semver constraints for the most part.
+There are a some gotchas to watch out for:
 
-- Go doesn't release .0 versions. The first 1.15.x releas is 1.15, not 1.15.0.
-  This means if you have set go-version to 1.15, when 1.15.1 is released it
-  won't be used because 1.15 is an exact match. If you want any go in the 1.15
-  family, set go-version to `1.15.x`
+- Prior to go1.21, Go doesn't release .0 versions. The first 1.15.x release is 1.15, not 1.15.0. This means if you 
+  have set go-version to 1.15, when 1.15.1 is released it won't be used because 1.15 is an exact match. If you
+  want any go in the 1.15 family, set go-version to `1.15.x`. For consistency, setup-go-faster@v1 continues to
+  handle constraints for post 1.21 the same as pre 1.21. This may change in a future major version.
 
-- Go's pre-releases are not valid semver. For example the beta for 1.16 is
-  1.16beta1. This means pre-releases need to be explicitely specified.
+- Go's pre-releases are not valid semver. For example the beta for 1.16 is 1.16beta1. This means pre-releases
+  need to be explicitely specified.
 
 For those who learn best from examples:
 
@@ -97,12 +94,14 @@ For those who learn best from examples:
 | < 1.15.6 >= 1.15.4 | installs a go that is >= 1.15.4 and < 1.15.6                                                   |
 | tip                | installs gotip  from source                                                                    |
 
+
 ### ignore-local
 
-Normally a pre-installed version of go that meets the go-version constraints
-will be used instead of checking whether a newer version is available for
-download. With ignore-local, the action will always check for a newer version
-available for download. Set this to any non-empty value to enable.
+Normally a pre-installed version of go that meets the go-version constraints will be used instead
+of checking whether a newer version is available for download. With ignore-local, the
+action will always check for a newer version available for download. Set this to any non-empty value
+to enable.
+
 
 ## Outputs
 
@@ -127,7 +126,7 @@ output of `go env GOROOT`
 output of `go env GOTOOLDIR`
 <!--- end generated --->
 
-[^1]: These results come
+[^perf-note]: These results come
 from [speedrun](https://github.com/WillAbides/test-setup-go-faster/blob/main/.github/workflows/speedrun.yml)
 and [speedrun-tip](https://github.com/WillAbides/test-setup-go-faster/blob/main/.github/workflows/speedrun-tip.yml)
 from
