@@ -7,7 +7,7 @@ It's like actions/setup-go but faster.
 Setup-go-faster takes about a third as long as setup-go to install go on a
 runner.
 
-These are the median times[^1] for installing go 1.20.7 and tip.
+These are the median times[^perf-note] for installing go 1.20.7 and tip.
 
 | runner os    | go-version |    setup-go | setup-go-faster | improvement |
 |--------------|------------|------------:|----------------:|------------:|
@@ -127,7 +127,7 @@ output of `go env GOROOT`
 output of `go env GOTOOLDIR`
 <!--- end generated --->
 
-[^1]: These results come
+[^perf-note]: These results come
 from [speedrun](https://github.com/WillAbides/test-setup-go-faster/blob/main/.github/workflows/speedrun.yml)
 and [speedrun-tip](https://github.com/WillAbides/test-setup-go-faster/blob/main/.github/workflows/speedrun-tip.yml)
 from
