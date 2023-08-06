@@ -1,22 +1,14 @@
 #!/bin/sh
+#/ script/bindown runs bindown with the given arguments
 
 set -e
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 mkdir -p bin
 
-BINDOWN_VERSION="4.5.0"
-
-if ! [ -f bin/bindown ]; then
-  set +e
-  VERSION_OUTPUT="$(bin/bindown version 2> /dev/null)"
-  set -e
-  if ! echo "$VERSION_OUTPUT" || grep -q "$BINDOWN_VERSION"; then
-    sh -c "$(
-      curl -sfL https://github.com/WillAbides/bindown/releases/download/"v$BINDOWN_VERSION"/bootstrap-bindown.sh
-    )"
-  fi
-fi
+[ -f bin/bindown ] || sh -c "$(
+  curl -sfL https://github.com/WillAbides/bindown/releases/download/v4.5.0/bootstrap-bindown.sh
+)"
 
 exec bin/bindown "$@"
