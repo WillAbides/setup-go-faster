@@ -30,6 +30,7 @@ jobs:
         shell: bash
     steps:
       - run: env
+      - run: go env
       - uses: actions/checkout@v3.3.0
       - run: script/bootstrap
       - run: script/test
