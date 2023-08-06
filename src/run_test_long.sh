@@ -24,7 +24,7 @@ do_test_run() {
   export VERSIONS_URL="${VERSIONS_URL:-$STABLE_VERSIONS_URL}"
   export SKIP_MATCHER=1
   export IGNORE_LOCAL_GO=1
-  unset GOROOT
+  export GOROOT=""
   GO_VERSION="$CONSTRAINT" ./src/run
   WANT_GOROOT="$RUNNER_WORKSPACE/setup-go-faster/go/$WANT_VERSION/x64"
   cat "$GITHUB_OUTPUT"
