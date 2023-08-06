@@ -37,6 +37,7 @@ GITHUB_PATH="${GITHUB_PATH:-/dev/null}"
 
 add_to_github_path "$target_dir/bin"
 PATH="$(add_to_system_path "$target_dir/bin")"
+echo PATH="$PATH"
 
 gopath=$(go env GOPATH)
 mkdir -p "$gopath/bin"
