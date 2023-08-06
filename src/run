@@ -13,6 +13,7 @@
 #
 # for testing:
 # VERSIONS_URL       # override the url used to get the list of known versions
+# SKIP_MATCHER       # don't issue the add-matcher command because it breaks when running tests on windows
 
 set -e
 [ -n "$DEBUG" ] && set -x
@@ -68,6 +69,6 @@ if [ -z "$lv" ]; then
   exit 1
 fi
 
-echo "::add-matcher::$GITHUB_ACTION_PATH/matchers.json"
+[ -n "$SKIP_MATCHER" ] || echo "::add-matcher::$GITHUB_ACTION_PATH/matchers.json"
 
 src/install-go "$lv" "$target_dir" "$install_parent/tip/x64"

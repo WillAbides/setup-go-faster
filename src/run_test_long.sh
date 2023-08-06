@@ -22,6 +22,7 @@ do_test_run() {
   export GITHUB_OUTPUT="$tmp_dir/github_output"
   export GITHUB_ACTION_PATH="$PWD"
   export VERSIONS_URL="${VERSIONS_URL:-$STABLE_VERSIONS_URL}"
+  export SKIP_MATCHER=1
   GO_VERSION="$CONSTRAINT" ./src/run
   WANT_GOROOT="$RUNNER_WORKSPACE/setup-go-faster/go/$WANT_VERSION/x64"
   cat "$GITHUB_OUTPUT"
