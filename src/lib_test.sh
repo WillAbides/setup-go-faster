@@ -90,7 +90,7 @@ test_select_go_version() {
   do_test_select_go_version "" "1.2.3"
   do_test_select_go_version "1.21.0" "1.21.x" "1.21.0"
   do_test_select_go_version "1.21.0" "1.21" "1.21.0"
-  do_test_select_go_version "1.20" "1.20.x" "1.20.0"
+  do_test_select_go_version "go1.20" "1.20.x" "go1.20"
 }
 
 test_select_remote_version() {

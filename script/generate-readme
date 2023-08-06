@@ -7,13 +7,13 @@ CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 gen_pattern="<!--- start generated --->*<!--- end generated --->"
 
 gen_sub="$(
-  cat <<EOF
+  cat << EOF
 <!--- start generated --->
 $(
     script/action-doc \
       --skip-action-name \
       --skip-action-description \
-      --header-prefix='#'\
+      --header-prefix='#' \
       action.yml
   )
 <!--- end generated --->
@@ -21,4 +21,4 @@ EOF
 )"
 
 readme="$(cat README.md)"
-echo "${readme//$gen_pattern/$gen_sub}" >README.md
+echo "${readme//$gen_pattern/$gen_sub}" > README.md

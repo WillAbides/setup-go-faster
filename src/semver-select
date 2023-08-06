@@ -3,24 +3,9 @@
 set -e
 [ -n "$DEBUG" ] && set -x
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
-goos() {
-  case "$RUNNER_OS" in
-  macOS)
-    echo "darwin"
-    ;;
-  Linux)
-    echo "linux"
-    ;;
-  Windows)
-    echo "windows"
-    ;;
-  *)
-    uname -s | tr '[:upper:]' '[:lower:]'
-    ;;
-  esac
-}
+. src/lib
 
 target_version="0.1.0"
 bin_path="./bin/semver-select"

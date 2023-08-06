@@ -36,19 +36,5 @@ ok( parse_and_match( "1.x",   "1.2.3" ) == 1 );
 ok( parse_and_match( "1.2.x", "1.2.3" ) == 1 );
 ok( parse_and_match( "1.2.x", "1.2.3beta1" ) == 0 );
 
-sub test_go_version_string {
-    my $in = shift;
-    my $p  = parse_go_version($in);
-    ok( go_version_string($p) eq $in, "test_go_version_string $in" );
-}
-
-test_go_version_string "1.2.3";
-test_go_version_string "1";
-test_go_version_string "0";
-test_go_version_string "1.0.1";
-test_go_version_string "1.1";
-test_go_version_string "1.1beta1";
-test_go_version_string "1beta1";
-
 done_testing();
 

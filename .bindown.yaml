@@ -1,0 +1,205 @@
+cache: .bindown
+systems:
+  - darwin/amd64
+  - darwin/arm64
+  - linux/amd64
+  - windows/amd64
+dependencies:
+  action-doc:
+    template: action-doc#action-doc
+    vars:
+      version: 0.4.0
+  caddy:
+    template: caddy
+    vars:
+      version: 2.7.3
+  octo:
+    template: origin#octo
+    vars:
+      version: 0.23.0
+  semver:
+    url: https://github.com/fsaintjacques/semver-tool/archive/{{.version}}.tar.gz
+    archive_path: ./semver-tool-{{.version}}/src/semver
+    vars:
+      version: 3.1.0
+    required_vars:
+      - version
+  shellcheck:
+    template: origin#shellcheck
+    vars:
+      version: 0.7.1
+  shfmt:
+    template: origin#shfmt
+    vars:
+      version: 3.6.0
+  shunit2:
+    url: https://github.com/kward/shunit2/archive/{{.ref}}.tar.gz
+    archive_path: ./shunit2-{{.ref}}/shunit2
+    vars:
+      ref: ebc4baa08f045b7ef0f45c4b7d6f34f08d732f3d
+    required_vars:
+      - ref
+templates:
+  action-doc#action-doc:
+    url: https://github.com/WillAbides/action-doc/releases/download/v{{.version}}/action-doc_{{.version}}_{{.os}}_{{.arch}}.tar.gz
+    systems:
+      - darwin/amd64
+      - linux/386
+      - linux/amd64
+    required_vars:
+      - version
+  caddy:
+    homepage: https://caddyserver.com
+    description: Fast and extensible multi-platform HTTP/1-2-3 web server with automatic HTTPS
+    url: https://github.com/caddyserver/caddy/releases/download/v{{.version}}/caddy_{{.version}}_{{.os}}_{{.arch}}{{.urlSuffix}}
+    archive_path: caddy{{.archivePathSuffix}}
+    bin: caddy
+    vars:
+      archivePathSuffix: ""
+      urlSuffix: .tar.gz
+    overrides:
+      - matcher:
+          os:
+            - windows
+        dependency:
+          vars:
+            archivePathSuffix: .exe
+            urlSuffix: .zip
+    substitutions:
+      os:
+        darwin: mac
+    systems:
+      - darwin/amd64
+      - darwin/arm64
+      - linux/amd64
+      - windows/amd64
+    required_vars:
+      - version
+  origin#octo:
+    homepage: https://github.com/octo-cli/octo-cli
+    url: https://github.com/octo-cli/octo-cli/releases/download/v{{.version}}/octo-cli_{{.version}}_{{.os}}_{{.arch}}{{.urlSuffix}}
+    archive_path: octo{{.archivePathSuffix}}
+    bin: octo
+    vars:
+      archivePathSuffix: ""
+      urlSuffix: .tar.gz
+    overrides:
+      - matcher:
+          os:
+            - windows
+        dependency:
+          vars:
+            archivePathSuffix: .exe
+          substitutions:
+            arch:
+              "386": i386
+              amd64: x86_64
+              arm64: x86_64
+            os:
+              windows: Windows
+    substitutions:
+      arch:
+        "386": i386
+        amd64: x86_64
+        arm64: x86_64
+      os:
+        darwin: Darwin
+        linux: Linux
+        windows: Windows
+    systems:
+      - darwin/amd64
+      - darwin/arm64
+      - linux/386
+      - linux/amd64
+      - windows/386
+      - windows/amd64
+    required_vars:
+      - version
+  origin#shellcheck:
+    homepage: https://www.shellcheck.net
+    description: ShellCheck, a static analysis tool for shell scripts
+    url: https://github.com/koalaman/shellcheck/releases/download/v{{.version}}/shellcheck-v{{.version}}.{{.os}}.{{.arch}}{{.urlSuffix}}
+    archive_path: shellcheck-v{{.version}}/shellcheck{{.archivePathSuffix}}
+    bin: shellcheck
+    vars:
+      archivePathSuffix: ""
+      urlSuffix: .tar.xz
+    overrides:
+      - matcher:
+          os:
+            - windows
+        dependency:
+          url: https://github.com/koalaman/shellcheck/releases/download/v{{.version}}/shellcheck-v{{.version}}.zip
+          archive_path: shellcheck.exe
+      - matcher:
+          arch:
+            - arm64
+          os:
+            - darwin
+        dependency:
+          substitutions:
+            arch:
+              arm64: x86_64
+    substitutions:
+      arch:
+        amd64: x86_64
+        arm: armv6hf
+        arm64: aarch64
+    systems:
+      - darwin/amd64
+      - darwin/arm64
+      - linux/amd64
+      - linux/arm
+      - linux/arm64
+      - windows/amd64
+    required_vars:
+      - version
+  origin#shfmt:
+    homepage: https://github.com/mvdan/sh
+    description: A shell parser, formatter, and interpreter with bash support; includes shfmt
+    url: https://github.com/mvdan/sh/releases/download/v{{.version}}/shfmt_v{{.version}}_{{.os}}_{{.arch}}{{.urlSuffix}}
+    archive_path: shfmt_v{{.version}}_{{.os}}_{{.arch}}{{.urlSuffix}}
+    bin: shfmt
+    vars:
+      archivePathSuffix: ""
+      urlSuffix: ""
+    overrides:
+      - matcher:
+          os:
+            - windows
+        dependency:
+          vars:
+            urlSuffix: .exe
+    systems:
+      - darwin/amd64
+      - darwin/arm64
+      - linux/386
+      - linux/amd64
+      - linux/arm
+      - linux/arm64
+      - windows/386
+      - windows/amd64
+    required_vars:
+      - version
+template_sources:
+  action-doc: https://raw.githubusercontent.com/WillAbides/action-doc/main/bindown.yml
+  origin: https://raw.githubusercontent.com/WillAbides/bindown-templates/master/bindown.yml
+url_checksums:
+  https://github.com/WillAbides/action-doc/releases/download/v0.4.0/action-doc_0.4.0_darwin_amd64.tar.gz: 6fcdd45d6a30bf5d17c27b09725fbd4cea5fef96e635abc82c894156207bf9b8
+  https://github.com/WillAbides/action-doc/releases/download/v0.4.0/action-doc_0.4.0_linux_amd64.tar.gz: 7c09a3b9270b4589e11a4f5248e0eb5eb9f5a0126625b5a0675c36554efb76d2
+  https://github.com/caddyserver/caddy/releases/download/v2.7.3/caddy_2.7.3_linux_amd64.tar.gz: a3da54761ab593ffc5e3dd4ecea8fd736663433b33680547e49c0d5e17585f5d
+  https://github.com/caddyserver/caddy/releases/download/v2.7.3/caddy_2.7.3_mac_amd64.tar.gz: 3415ef4a1c63b1cb4101870d428971287ab01869d32c1f194a75b08156ed0955
+  https://github.com/caddyserver/caddy/releases/download/v2.7.3/caddy_2.7.3_mac_arm64.tar.gz: 7d6d796875d27217e22dc18f48ee052cfbb69f6f6f1409d8497426fe2764798c
+  https://github.com/caddyserver/caddy/releases/download/v2.7.3/caddy_2.7.3_windows_amd64.zip: 94b3fb0b876f277be380b18980329ff78255f18ca1fdbae7e49d7f1ef48312d2
+  https://github.com/fsaintjacques/semver-tool/archive/3.1.0.tar.gz: 7cad0dea3a6249190f98167476f322c61577b3a069d6afd0022bef9f1824f202
+  https://github.com/koalaman/shellcheck/releases/download/v0.7.1/shellcheck-v0.7.1.darwin.x86_64.tar.xz: b080c3b659f7286e27004aa33759664d91e15ef2498ac709a452445d47e3ac23
+  https://github.com/koalaman/shellcheck/releases/download/v0.7.1/shellcheck-v0.7.1.linux.x86_64.tar.xz: 64f17152d96d7ec261ad3086ed42d18232fcb65148b44571b564d688269d36c8
+  https://github.com/koalaman/shellcheck/releases/download/v0.7.1/shellcheck-v0.7.1.zip: 1763f8f4a639d39e341798c7787d360ed79c3d68a1cdbad0549c9c0767a75e98
+  https://github.com/kward/shunit2/archive/ebc4baa08f045b7ef0f45c4b7d6f34f08d732f3d.tar.gz: d18b23a0db5deed5b0e10a732ac1f94579ac2781ce9408d62f0e847e3fa6910b
+  https://github.com/mvdan/sh/releases/download/v3.6.0/shfmt_v3.6.0_darwin_amd64: b8c9c025b498e2816b62f0b717f6032e9ab49e725a45b8205f52f66318f17185
+  https://github.com/mvdan/sh/releases/download/v3.6.0/shfmt_v3.6.0_darwin_arm64: 633f242246ee0a866c5f5df25cbf61b6af0d5e143555aca32950059cf13d91e0
+  https://github.com/mvdan/sh/releases/download/v3.6.0/shfmt_v3.6.0_linux_amd64: 5741a02a641de7e56b8da170e71a97e58050d66a3cf485fb268d6a5a8bb74afb
+  https://github.com/mvdan/sh/releases/download/v3.6.0/shfmt_v3.6.0_windows_amd64.exe: 18122d910ba434be366588f37c302c309cde4ca5403f93285254a3cf96839d01
+  https://github.com/octo-cli/octo-cli/releases/download/v0.23.0/octo-cli_0.23.0_Darwin_x86_64.tar.gz: 1388c1ca5838a453055930035c81b231b829ef3b0511cc7765dffdd73b83d355
+  https://github.com/octo-cli/octo-cli/releases/download/v0.23.0/octo-cli_0.23.0_Linux_x86_64.tar.gz: 7bad6194d91bd9cd86a348dadafd7725b3bb4010afe36294df0740e8c815947a
+  https://github.com/octo-cli/octo-cli/releases/download/v0.23.0/octo-cli_0.23.0_Windows_x86_64.tar.gz: 5c2a2b706b626b62db1790a7dec324d6fe8ecf72f791fda5ff4bb595f741e5bc

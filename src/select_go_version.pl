@@ -10,9 +10,16 @@ require "lib.pl";
 my $usage = "usage: echo <versions...> | select_go_version.pl pattern";
 
 my $pat_arg = shift;
-exit_err($usage) unless $pat_arg;
+unless ($pat_arg) {
+    print "$usage\n";
+    exit 1;
+}
+
 my $pat = parse_go_version($pat_arg);
-exit_err("invalid pattern: $pat_arg") unless $pat;
+unless ($pat) {
+    print "invalid pattern: $pat_arg\n";
+    exit 1;
+}
 
 my $max;
 
@@ -26,4 +33,5 @@ foreach my $v (<STDIN>) {
 }
 
 exit 1 unless $max;
-print go_version_string($max) . "\n";
+
+print $$max{"original"} . "\n";

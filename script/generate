@@ -7,13 +7,13 @@ CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
 if [ "$1" = "--check" ]; then
   [ -z "$(git status --porcelain)" ] || {
     git status
-    1>&2 echo "Running 'script/generate --check' requires a clean git working tree. Please commit or stash changes and try again."
+    echo 1>&2 "Running 'script/generate --check' requires a clean git working tree. Please commit or stash changes and try again."
     exit 1
   }
   script/generate
   [ -z "$(git status --porcelain)" ] || {
     git status
-    1>&2 echo "script/generate resulted in changes. Please commit changes (or 'git reset --hard HEAD' if you aren't ready to commit changes)."
+    echo 1>&2 "script/generate resulted in changes. Please commit changes (or 'git reset --hard HEAD' if you aren't ready to commit changes)."
     git diff
     exit 1
   }

@@ -1,18 +1,27 @@
 #!/bin/bash
 
 # required global vars:
-# RUNNER_TOOL_CACHE         # provided by action
 # GO_VERSION= version constraint
+# RUNNER_TOOL_CACHE         # provided by action
+# RUNNER_WORKSPACE          # provided by action
+# GITHUB_ACTION_PATH        # provided by action
+# GITHUB_OUTPUT             # provided by action
 #
 # optional vars:
-# INSTALL_GO_FORCE                                     # set to non-empty to force the install
+# INSTALL_GO_FORCE   # set to non-empty to force the install
+# IGNORE_LOCAL_GO    # set to non-empty to ignore local go installations
+#
+# for testing:
+# VERSIONS_URL       # override the url used to get the list of known versions
 
 set -e
 [ -n "$DEBUG" ] && set -x
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 . src/lib
+
+VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/WillAbides/goreleases/main/versions.txt}"
 
 debug_out starting run
 
@@ -49,7 +58,7 @@ if [ -z "$lv" ]; then
 fi
 
 if [ -z "$lv" ]; then
-  known_versions="$(curl --retry 4 -s --fail 'https://raw.githubusercontent.com/WillAbides/goreleases/main/versions.txt')"
+  known_versions="$(curl --retry 4 -s --fail "$VERSIONS_URL")"
   lv="$(select_remote_version "$constraint" "$known_versions")"
   target_dir="$install_parent/$lv/x64"
 fi

@@ -2,22 +2,22 @@
 
 set -e
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 goos() {
   case "$RUNNER_OS" in
-  macOS)
-    echo "darwin"
-    ;;
-  Linux)
-    echo "linux"
-    ;;
-  Windows)
-    echo "windows"
-    ;;
-  *)
-    uname -s | tr '[:upper:]' '[:lower:]'
-    ;;
+    macOS)
+      echo "darwin"
+      ;;
+    Linux)
+      echo "linux"
+      ;;
+    Windows)
+      echo "windows"
+      ;;
+    *)
+      uname -s | tr '[:upper:]' '[:lower:]'
+      ;;
   esac
 }
 
@@ -90,7 +90,7 @@ install_go() {
   fi
   mv "go" "$target_dir"
 
-  cd - >/dev/null
+  cd - > /dev/null
 }
 
 add_to_system_path() {
@@ -103,7 +103,7 @@ add_to_system_path() {
 
 add_to_github_path() {
   element="$1"
-  echo "$element" >>"$GITHUB_PATH"
+  echo "$element" >> "$GITHUB_PATH"
 }
 
 exe_name() {
@@ -159,7 +159,7 @@ select_remote_version() {
   local constraint="$1"
   local versions="$2"
   # shellcheck disable=SC2001
-  versions="$(echo "$versions"| sed 's/^go//g')"
+  versions="$(echo "$versions" | sed 's/^go//g')"
 
   if got="$(select_go_version "$constraint" "$versions")"; then
     echo "$got" && return
