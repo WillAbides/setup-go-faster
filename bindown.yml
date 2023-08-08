@@ -1,6 +1,6 @@
 systems:
-- darwin/amd64
-- linux/amd64
+  - darwin/amd64
+  - linux/amd64
 dependencies:
   action-doc:
     template: action-doc#action-doc
@@ -16,7 +16,7 @@ dependencies:
     vars:
       version: 3.1.0
     required_vars:
-    - version
+      - version
   shellcheck:
     template: origin#shellcheck
     vars:
@@ -27,39 +27,37 @@ dependencies:
     vars:
       ref: ebc4baa08f045b7ef0f45c4b7d6f34f08d732f3d
     required_vars:
-    - ref
+      - ref
 templates:
   action-doc#action-doc:
     url: https://github.com/WillAbides/action-doc/releases/download/v{{.version}}/action-doc_{{.version}}_{{.os}}_{{.arch}}.tar.gz
-    required_vars:
-    - version
     systems:
-    - darwin/amd64
-    - linux/386
-    - linux/amd64
+      - darwin/amd64
+      - linux/386
+      - linux/amd64
+    required_vars:
+      - version
   origin#octo:
     url: https://github.com/octo-cli/octo-cli/releases/download/v{{.version}}/octo-cli_{{.version}}_{{.os}}_{{.arch}}.tar.gz
     archive_path: octo{{.archivepathsuffix}}
     bin: octo
     vars:
       archivepathsuffix: ""
-    required_vars:
-    - version
     overrides:
-    - matcher:
-        os:
-        - windows
-      dependency:
-        vars:
-          archivepathsuffix: .exe
-    - matcher:
-        arch:
-        - arm64
-        os:
-        - darwin
-      dependency:
-        vars:
-          arch: amd64
+      - matcher:
+          os:
+            - windows
+        dependency:
+          vars:
+            archivepathsuffix: .exe
+      - matcher:
+          arch:
+            - arm64
+          os:
+            - darwin
+        dependency:
+          vars:
+            arch: amd64
     substitutions:
       arch:
         "386": i386
@@ -69,33 +67,35 @@ templates:
         linux: Linux
         windows: Windows
     systems:
-    - darwin/386
-    - darwin/amd64
-    - darwin/arm64
-    - linux/386
-    - linux/amd64
-    - windows/386
-    - windows/amd64
+      - darwin/386
+      - darwin/amd64
+      - darwin/arm64
+      - linux/386
+      - linux/amd64
+      - windows/386
+      - windows/amd64
+    required_vars:
+      - version
   origin#shellcheck:
     url: https://github.com/koalaman/shellcheck/releases/download/v{{.version}}/shellcheck-v{{.version}}.{{.os}}.{{.arch}}.tar.xz
     archive_path: shellcheck-v{{.version}}/shellcheck
     bin: shellcheck
-    required_vars:
-    - version
     overrides:
-    - matcher:
-        os:
-        - windows
-      dependency:
-        url: https://github.com/koalaman/shellcheck/releases/download/v{{.version}}/shellcheck-v{{.version}}.zip
-        archive_path: shellcheck-v{{.version}}.exe
+      - matcher:
+          os:
+            - windows
+        dependency:
+          url: https://github.com/koalaman/shellcheck/releases/download/v{{.version}}/shellcheck-v{{.version}}.zip
+          archive_path: shellcheck-v{{.version}}.exe
     substitutions:
       arch:
         amd64: x86_64
     systems:
-    - darwin/amd64
-    - linux/amd64
-    - windows/amd64
+      - darwin/amd64
+      - linux/amd64
+      - windows/amd64
+    required_vars:
+      - version
 template_sources:
   action-doc: https://raw.githubusercontent.com/WillAbides/action-doc/main/bindown.yml
   origin: https://raw.githubusercontent.com/WillAbides/bindown-templates/master/bindown.yml
