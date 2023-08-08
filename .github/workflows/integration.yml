@@ -144,6 +144,7 @@ jobs:
         with:
           go-version: '1.21'
           ignore-local: true
+          debug: true
       - name: outputs
         run: |
           echo '*********** env ************'
@@ -163,6 +164,7 @@ jobs:
         with:
           go-version: '1.21.0'
           ignore-local: true
+          debug: true
       - name: outputs
         run: |
           echo '*********** env ************'
