@@ -2,6 +2,14 @@
 
 It's like actions/setup-go but faster.
 
+### A Note About Go 1.21.0
+
+**Use setup-go-faster@v1.9.1 or later** if you want to install Go 1.21.0.
+
+With the release of go1.21.0, the Go team has changed the way they style
+dot-zero releases. They used to be styled like `go1.N`, but now they are 
+`go1.N.0`. This caused issues with earlier versions of setup-go-faster.
+
 ### Faster
 
 Setup-go-faster takes about a third as long as setup-go to install go on a
