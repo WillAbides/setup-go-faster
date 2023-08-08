@@ -28,7 +28,6 @@ fi
 # shellcheck disable=2153 # false positive about GO_VERSION being a misspelling of go_version
 if [ -n "$GO_VERSION" ] && [ -n "$GO_VERSION_FILE" ]; then
   echo "::warning ::Both go-version or go-version-file are set, but only go-version will be used"
-  exit 1
 fi
 
 # shellcheck disable=2153 # false positive about GO_VERSION being a misspelling of go_version
