@@ -72,6 +72,7 @@ download_go_url() {
 install_go() {
   local go_version="$1"
   local target_dir="$2"
+  debug_out "installing go $go_version to $target_dir"
   rm -rf "$target_dir"
   mkdir -p "$(dirname "$target_dir")"
   tmpdir="$(init_tmpdir)"
@@ -113,8 +114,9 @@ exe_name() {
 }
 
 is_precise_version() {
-  [[ $1 =~ ^[0-9]+(.[0-9]+(.[0-9]+)?)?([A-Za-z0-9]+)?$ ]] && return
-  return 1
+  [[ $1 =~ ^[0-9]+(.([0-9]+)(.[0-9]+)?)?([A-Za-z0-9]+)?$ ]] || return 1
+  # false when minor is >= 21 and patch is empty
+  [ -z "${BASH_REMATCH[2]}" ] || [ "${BASH_REMATCH[2]}" -lt 21 ] || [ -n "${BASH_REMATCH[3]}" ]
 }
 
 select_go_version() {

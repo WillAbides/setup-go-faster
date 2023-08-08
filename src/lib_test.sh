@@ -40,6 +40,8 @@ test_is_precise_version() {
 9999.9999.9999
 1.15beta1
 1.16rc1
+1.21.0
+1.21.1
   '
 
   for v in $versions; do
@@ -48,6 +50,7 @@ test_is_precise_version() {
   done
 
   not_versions='
+1.21
 *
 1.x
 1.15.x
