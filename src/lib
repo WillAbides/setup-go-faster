@@ -114,8 +114,9 @@ exe_name() {
 }
 
 is_precise_version() {
-  [[ $1 =~ ^[0-9]+(.[0-9]+(.[0-9]+)?)?([A-Za-z0-9]+)?$ ]] && return
-  return 1
+  [[ $1 =~ ^[0-9]+(.([0-9]+)(.[0-9]+)?)?([A-Za-z0-9]+)?$ ]] || return 1
+  # false when minor is >= 21 and patch is empty
+  [ -z "${BASH_REMATCH[2]}" ] || [ "${BASH_REMATCH[2]}" -lt 21 ] || [ -n "${BASH_REMATCH[3]}" ]
 }
 
 select_go_version() {
