@@ -117,11 +117,6 @@ action will always check for a newer version available for download. Set this to
 to enable.
 
 
-### debug
-
-Set this to any non-empty value to enable debug logging.
-
-
 ## Outputs
 
 ### GOCACHE

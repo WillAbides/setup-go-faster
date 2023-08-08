@@ -1,35 +1,35 @@
 name: integration
 on: [ push, workflow_dispatch ]
 jobs:
-#  install_go_tip:
-#    name: install tip
-#    strategy:
-#      fail-fast: false
-#      matrix:
-#        os:
-#          - ubuntu-22.04
-#          - windows-2022
-#    runs-on: ${{ matrix.os }}
-#    defaults:
-#      run:
-#        shell: bash
-#    steps:
-#      - uses: actions/checkout@v3.3.0
-#      - id: setup_go
-#        name: install tip
-#        uses: ./
-#        with:
-#          go-version: tip
-#      - name: outputs
-#        run: |
-#          echo '*********** env ************'
-#          env
-#          echo '*********** go env ***********'
-#          go env
-#          echo '${{ toJson( steps.setup_go.outputs ) }}' | jq .
-#          go version
-#          set -ex
-#          [[ "$(go version)" == *"devel"* ]]
+  install_go_tip:
+    name: install tip
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+          - windows-2022
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - id: setup_go
+        name: install tip
+        uses: ./
+        with:
+          go-version: tip
+      - name: outputs
+        run: |
+          echo '*********** env ************'
+          env
+          echo '*********** go env ***********'
+          go env
+          echo '${{ toJson( steps.setup_go.outputs ) }}' | jq .
+          go version
+          set -ex
+          [[ "$(go version)" == *"devel"* ]]
   install_go:
     name: install go
     strategy:
