@@ -72,6 +72,7 @@ download_go_url() {
 install_go() {
   local go_version="$1"
   local target_dir="$2"
+  debug_out "installing go $go_version to $target_dir"
   rm -rf "$target_dir"
   mkdir -p "$(dirname "$target_dir")"
   tmpdir="$(init_tmpdir)"
