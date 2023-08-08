@@ -2,7 +2,7 @@
 
 It's like actions/setup-go but faster.
 
-## A Note About Go 1.21.0
+### A Note About Go 1.21.0
 
 **Use setup-go-faster@v1.9.1 or later** if you want to install Go 1.21.0.
 
