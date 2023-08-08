@@ -172,3 +172,15 @@ select_remote_version() {
 
   echo "$versions" | ./src/semver-select -c "$constraint" -n 1 -i -
 }
+
+select_go_version_from_file() {
+  local go_file_path="$1"
+
+  file_name="$(basename "$go_file_path")"
+  if [ "$file_name" != "go.mod" ] && [ "$file_name" != "go.work" ]; then
+    echo "::error ::File is not go.mod nor go.work"
+    return
+  fi
+
+  perl -nle 'print $1 if /^go (\d\.\d+)/' < "$go_file_path"
+}

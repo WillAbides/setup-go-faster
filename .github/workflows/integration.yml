@@ -137,3 +137,34 @@ jobs:
           [[ "$(go version)" == *"1.13"* ]]
           [[ '${{steps.setup_go_1_13_x.outputs.GOROOT}}' == *"1.13"* ]]
           [[ '${{steps.setup_go_1_13_x.outputs.GOTOOLDIR}}' == *"1.13"* ]]
+
+
+      - name: create_go_mod
+        run: |
+          cat >> go.mod << EOF
+          module example.com/some-module
+ 
+          go 1.15
+ 
+          require (
+            golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691
+            golang.org/x/sync v0.3.0
+          )
+      - id: setup_go_1_15_from_go_mod
+        name: install 1.15 from go.mod
+        uses: ./
+        with:
+          go-version-file: 'go.mod'
+          ignore-local: true
+      - name: outputs
+        run: |
+          echo '*********** env ************'
+          env
+          echo '*********** go env ***********'
+          go env
+          echo '${{ toJson( steps.setup_go_1_15_from_go_mod.outputs ) }}' | jq .
+          go version
+          set -ex
+          [[ "$(go version)" == *"1.15"* ]]
+          [[ '${{steps.setup_go_1_15_from_go_mod.outputs.GOROOT}}' == *"1.15"* ]]
+          [[ '${{steps.setup_go_1_15_from_go_mod.outputs.GOTOOLDIR}}' == *"1.15"* ]]

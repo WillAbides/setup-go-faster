@@ -2,7 +2,7 @@ name: 'Setup Go Faster'
 description: It's like actions/setup-go but faster.
 inputs:
   go-version:
-    required: true
+    required: false
     description: |
       The version of go to install. It can be an exact version or a semver constraint like '1.14.x' or '^1.14.4'.
       Do not add "go" or "v" to the beginning of the version.
@@ -40,6 +40,9 @@ inputs:
       | < 1.15.6 >= 1.15.4 | installs a go that is >= 1.15.4 and < 1.15.6                                                   |
       | tip                | installs gotip  from source                                                                    |
 
+  go-version-file:
+    required: false
+    description: 'Path to the go.mod or go.work file.'
   ignore-local:
     required: false
     description: |
@@ -72,6 +75,7 @@ runs:
         DEBUG: ""
         IGNORE_LOCAL_GO: ${{ inputs.ignore-local }}
         GO_VERSION: ${{ inputs.go-version }}
+        GO_VERSION_FILE: ${{ inputs.go-version-file }}
       shell: bash
       run: src/run
 branding:
