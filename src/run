@@ -38,7 +38,7 @@ if [ "$constraint" = "tip" ] || [ "$constraint" = "gotip" ]; then
 fi
 
 if [ -z "$constraint" ]; then
-  constraint="$(select_go_version_from_file "$GITHUB_WORKSPACE/$GO_VERSION_FILE")"
+  constraint=">=$(select_go_version_from_file "$GITHUB_WORKSPACE/$GO_VERSION_FILE")"
 fi
 
 install_parent="$RUNNER_WORKSPACE/setup-go-faster/go"

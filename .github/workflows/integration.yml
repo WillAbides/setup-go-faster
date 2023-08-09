@@ -208,6 +208,10 @@ jobs:
           echo '${{ toJson( steps.setup_go_1_15_from_go_mod.outputs ) }}' | jq .
           go version
           set -ex
-          [[ "$(go version)" == *"1.15"* ]]
-          [[ '${{steps.setup_go_1_15_from_go_mod.outputs.GOROOT}}' == *"1.15"* ]]
-          [[ '${{steps.setup_go_1_15_from_go_mod.outputs.GOTOOLDIR}}' == *"1.15"* ]]
+          requested_min_version='1.15'
+          installed_version="$(go version | cut -d " " -f 3 | tr -d "go")"
+          lowest_version="$(echo -e "$requested_min_version\n$installed_version" | sort -rV | tail -1)"
+
+          [[ "$lowest_version" == "$requested_min_version" ]]
+          [[ '${{steps.setup_go_1_15_from_go_mod.outputs.GOROOT}}' == *"$installed_version"* ]]
+          [[ '${{steps.setup_go_1_15_from_go_mod.outputs.GOTOOLDIR}}' == *"$installed_version"* ]]

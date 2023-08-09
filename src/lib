@@ -181,8 +181,13 @@ select_go_version_from_file() {
   file_name="$(basename "$go_file_path")"
   if [ "$file_name" != "go.mod" ] && [ "$file_name" != "go.work" ]; then
     echo "::error ::File is not go.mod nor go.work"
-    return
+    return 1
   fi
 
-  perl -nle 'print $1 if /^go (\d\.\d+)/' < "$go_file_path"
+  found_version="$(perl -nle 'print $1 if /^\s*go (\d\.\d+.*$)/' < "$go_file_path")"
+  if [ -z "$found_version" ]; then
+    found_version="1.16"
+  fi
+
+  echo "$found_version"
 }
