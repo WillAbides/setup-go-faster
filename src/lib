@@ -179,7 +179,7 @@ select_remote_version() {
 #  go1.2rc3 -> 1.2.0-rc3
 #  1.2.3rc3 -> 1.2.3-rc3
 normalize_go_version() {
-  ./src/"semver-select" --go -c '*.0' "$1"
+  ./src/"semver-select" --go -c '*-0' "$1"
 }
 
 select_go_version_from_file() {
