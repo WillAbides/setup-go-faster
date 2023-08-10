@@ -180,7 +180,7 @@ jobs:
           [[ '${{steps.setup_go_1_21.outputs.GOROOT}}' == *"1.21.0"* ]]
           [[ '${{steps.setup_go_1_21.outputs.GOTOOLDIR}}' == *"1.21.0"* ]]
 
-      - name: create_go_mod
+      - name: create_go_mod 1.15
         run: |
           cat >> go.mod << EOF
           module example.com/some-module
@@ -213,3 +213,36 @@ jobs:
           [[ "$lowest_version" == "$requested_min_version" ]]
           [[ '${{steps.setup_go_1_15_from_go_mod.outputs.GOROOT}}' == *"$installed_version"* ]]
           [[ '${{steps.setup_go_1_15_from_go_mod.outputs.GOTOOLDIR}}' == *"$installed_version"* ]]
+      - name: create_go_mod 1.21rc1
+        run: |
+          cat >> go.mod << EOF
+          module example.com/some-module
+          
+          go 1.21rc1
+          
+          require (
+            golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691
+            golang.org/x/sync v0.3.0
+          )
+      - id: setup_go_1_21rc1_from_go_mod
+        name: install 1.21rc1 from go.mod
+        uses: ./
+        with:
+          go-version-file: 'go.mod'
+          ignore-local: true
+      - name: outputs
+        run: |
+          echo '*********** env ************'
+          env
+          echo '*********** go env ***********'
+          go env
+          echo '${{ toJson( steps.setup_go_1_21rc1_from_go_mod.outputs ) }}' | jq .
+          go version
+          set -ex
+          requested_min_version='1.21rc1'
+          installed_version="$(go version | cut -d " " -f 3 | tr -d "go")"
+          lowest_version="$(echo -e "$requested_min_version\n$installed_version" | sort -rV | tail -1)"
+
+          [[ "$lowest_version" == "$requested_min_version" ]]
+          [[ '${{steps.setup_go_1_21rc1_from_go_mod.outputs.GOROOT}}' == *"$installed_version"* ]]
+          [[ '${{steps.setup_go_1_21rc1_from_go_mod.outputs.GOTOOLDIR}}' == *"$installed_version"* ]]
