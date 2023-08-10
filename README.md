@@ -65,8 +65,6 @@ accordingly. If there is good use case for `stable`, it can be added.
 
 ### go-version
 
-__Required__
-
 The version of go to install. It can be an exact version or a semver constraint like '1.14.x' or '^1.14.4'.
 Do not add "go" or "v" to the beginning of the version.
 
@@ -103,6 +101,10 @@ For those who learn best from examples:
 | < 1.15.6 >= 1.15.4 | installs a go that is >= 1.15.4 and < 1.15.6                                                   |
 | tip                | installs gotip  from source                                                                    |
 
+
+### go-version-file
+
+Path to the go.mod or go.work file.
 
 ### ignore-local
 

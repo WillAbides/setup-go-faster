@@ -2,9 +2,10 @@
 
 # required global vars:
 # RUNNER_TOOL_CACHE         # provided by action
-# GO_VERSION= version constraint
 #
 # optional vars:
+# GO_VERSION= version constraint
+# GO_VERSION_FILE= path to go.mod or go.work
 # INSTALL_GO_FORCE                                     # set to non-empty to force the install
 
 set -e
@@ -19,10 +20,25 @@ debug_out starting run
 export INSTALL_GO_TIP
 
 # shellcheck disable=2153 # false positive about GO_VERSION being a misspelling of go_version
+if [ -z "$GO_VERSION" ] && [ -z "$GO_VERSION_FILE" ]; then
+  echo "::error ::Either go-version or go-version-file must be specified"
+  exit 1
+fi
+
+# shellcheck disable=2153 # false positive about GO_VERSION being a misspelling of go_version
+if [ -n "$GO_VERSION" ] && [ -n "$GO_VERSION_FILE" ]; then
+  echo "::warning ::Both go-version or go-version-file are set, but only go-version will be used"
+fi
+
+# shellcheck disable=2153 # false positive about GO_VERSION being a misspelling of go_version
 constraint="$GO_VERSION"
 if [ "$constraint" = "tip" ] || [ "$constraint" = "gotip" ]; then
   constraint='*'
   INSTALL_GO_TIP=1
+fi
+
+if [ -z "$constraint" ]; then
+  constraint=">=$(select_go_version_from_file "$GITHUB_WORKSPACE/$GO_VERSION_FILE")"
 fi
 
 install_parent="$RUNNER_WORKSPACE/setup-go-faster/go"
