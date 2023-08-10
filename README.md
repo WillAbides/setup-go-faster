@@ -104,7 +104,10 @@ For those who learn best from examples:
 
 ### go-version-file
 
-Path to the go.mod or go.work file.
+Path to a go.mod or go.work file. setup-go-faster will take the version from the "go" directive
+in this file and convert it to a semver minimum version. For example, if the go directive is `go 1.21rc1`,
+setup-go-faster will use the constraint `>= 1.21.0-rc1`.
+
 
 ### ignore-local
 
