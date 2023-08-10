@@ -1,8 +1,9 @@
 #!/bin/sh
+#/ script/test runs tests on the project.
 
 set -e
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 if [ "$1" = "-long" ]; then
   for f in ./src/*_test_long.*; do

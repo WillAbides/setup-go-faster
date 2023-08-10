@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -e
-
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
-
-script/bindown install octo > /dev/null
-exec bin/octo "$@"

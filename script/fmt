@@ -1,0 +1,10 @@
+#!/bin/sh
+#/ script/fmt formats go code and shell scripts.
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$0")/.."
+
+script/bindown -q install shfmt
+
+bin/shfmt -ci -i 2 -ci -sr -w -s ./script ./src
