@@ -27,7 +27,9 @@ do_test_run() {
   export GOROOT=""
   GO_VERSION="$CONSTRAINT" ./src/run
   WANT_GOROOT="$RUNNER_WORKSPACE/setup-go-faster/go/$WANT_VERSION/x64"
+  echo "start GITHUB_OUTPUT"
   cat "$GITHUB_OUTPUT"
+  echo "end GITHUB_OUTPUT"
   assertContains "$(grep '^GOROOT=' "$GITHUB_OUTPUT")" "$WANT_GOROOT"
 }
 
