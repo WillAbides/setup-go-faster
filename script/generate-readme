@@ -1,24 +1,33 @@
 #!/bin/bash
+#/ script/generate-readme updates README.md with action.yml documentation.
 
 set -e
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
-gen_pattern="<!--- start generated --->*<!--- end generated --->"
+update_file_section() {
+  file="$1"
+  start_comment="$2"
+  end_comment="$3"
+  replacement="$4"
 
-gen_sub="$(
-  cat << EOF
-<!--- start generated --->
-$(
-    script/action-doc \
+  pattern="${start_comment}*${end_comment}"
+  data="$(cat "$file")"
+  replacement="$start_comment
+$replacement
+$end_comment"
+  echo "${data//$pattern/$replacement}" > "$file"
+}
+
+script/bindown -q install action-doc
+
+update_file_section README.md \
+  '<!--- start generated --->' \
+  '<!--- end generated --->' \
+  "$(
+    bin/"action-doc" \
       --skip-action-name \
       --skip-action-description \
       --header-prefix='#' \
       action.yml
-  )
-<!--- end generated --->
-EOF
-)"
-
-readme="$(cat README.md)"
-echo "${readme//$gen_pattern/$gen_sub}" > README.md
+  )"

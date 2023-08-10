@@ -1,8 +1,9 @@
 #!/bin/sh
+#/ script/bootstrap installs dependencies for testing and development.
 
 set -e
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 mkdir -p ./external
 

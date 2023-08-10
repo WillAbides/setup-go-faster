@@ -2,15 +2,17 @@
 
 set -e
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 if [ -z "$1" ]; then
   echo first and only argument should be a version >&2
   exit 1
 fi
 
-readonly version="$(script/semver bump release "$1")"
-readonly major="$(script/semver get major "$version")"
+script/bindown -q install octo semver
+
+readonly version="$(bin/semver bump release "$1")"
+readonly major="$(bin/semver get major "$version")"
 readonly orig_ref="$(git rev-parse --abbrev-ref HEAD)"
 readonly release_branch="v$major"
 readonly commit="$(git rev-parse HEAD)"
@@ -28,7 +30,7 @@ fi
 git merge --ff-only "$commit" --quiet
 git push origin "$release_branch"
 
-script/octo repos create-release \
+bin/octo repos create-release \
   --repo WillAbides/setup-go-faster \
   --tag_name "v$version" \
   --target_commitish "$release_branch" \

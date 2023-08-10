@@ -1,7 +1,10 @@
 #!/bin/sh
+#/ script/lint runs linters on the project.
 
 set -e
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
-script/shellcheck -e SC1071 -x ./script/* ./src/*
+script/bindown -q install shellcheck
+
+bin/shellcheck -e SC1071 -x ./script/* ./src/*
