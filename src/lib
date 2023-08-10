@@ -175,6 +175,13 @@ select_remote_version() {
   echo "$versions" | ./src/"semver-select" --go -c "$constraint" -n 1 -i -
 }
 
+# uses semver-select to convert a go version to semver
+#  go1.2rc3 -> 1.2.0-rc3
+#  1.2.3rc3 -> 1.2.3-rc3
+normalize_go_version() {
+  ./src/"semver-select" --go -c '*.0' "$1"
+}
+
 select_go_version_from_file() {
   local go_file_path="$1"
 
@@ -189,5 +196,5 @@ select_go_version_from_file() {
     found_version="1.16"
   fi
 
-  echo "$found_version"
+  normalize_go_version "$found_version"
 }
