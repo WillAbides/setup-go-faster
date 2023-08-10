@@ -182,7 +182,8 @@ jobs:
 
       - name: create_go_mod 1.15
         run: |
-          cat >> go.mod << EOF
+          mkdir -p tmp/go_mod_1_15
+          cat >> tmp/go_mod_1_15/go.mod << EOF
           module example.com/some-module
  
           go 1.15
@@ -195,7 +196,7 @@ jobs:
         name: install 1.15 from go.mod
         uses: ./
         with:
-          go-version-file: 'go.mod'
+          go-version-file: 'tmp/go_mod_1_15/go.mod'
           ignore-local: true
       - name: outputs
         run: |
@@ -215,7 +216,8 @@ jobs:
           [[ '${{steps.setup_go_1_15_from_go_mod.outputs.GOTOOLDIR}}' == *"$installed_version"* ]]
       - name: create_go_mod 1.21rc1
         run: |
-          cat >> go.mod << EOF
+          mkdir -p tmp/go_mod_1_21rc1
+          cat >> tmp/go_mod_1_21rc1/go.mod << EOF
           module example.com/some-module
           
           go 1.21rc1
@@ -228,7 +230,7 @@ jobs:
         name: install 1.21rc1 from go.mod
         uses: ./
         with:
-          go-version-file: 'go.mod'
+          go-version-file: 'tmp/go_mod_1_21rc1/go.mod'
           ignore-local: true
       - name: outputs
         run: |
