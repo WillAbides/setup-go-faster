@@ -1,11 +1,18 @@
 #!/bin/sh
+#/ script/bindown runs bindown with the given arguments
 
 set -e
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 mkdir -p bin
 
-[ -f bin/bindown ] || sh -c "$(curl -sfL https://github.com/WillAbides/bindown/releases/download/v4.6.0/bootstrap-bindown.sh)"
+BINDOWN_VERSION="4.6.0"
+DL_URL=https://github.com/WillAbides/bindown/releases/download/v"$BINDOWN_VERSION"/bootstrap-bindown.sh
+BOOTSTRAP_FILE=bin/bootstrap-bindown-"$BINDOWN_VERSION".sh
+
+[ -f "$BOOTSTRAP_FILE" ] || curl -sfL -o "$BOOTSTRAP_FILE" "$DL_URL"
+
+sh < "$BOOTSTRAP_FILE"
 
 exec bin/bindown "$@"

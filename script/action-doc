@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -e
-
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
-
-script/bindown install action-doc > /dev/null
-exec bin/action-doc "$@"

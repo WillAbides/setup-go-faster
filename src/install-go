@@ -9,7 +9,7 @@
 set -e
 [ -n "$DEBUG" ] && set -x
 
-CDPATH="" cd -- "$(dirname -- "$(dirname -- "$0")")"
+CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 . src/lib
 
@@ -62,8 +62,8 @@ GOPATH
 GOROOT
 GOTOOLDIR'
 
-echo "GOROOT=$(go env GOROOT)" >>"$GITHUB_ENV"
+echo "GOROOT=$(go env GOROOT)" >> "$GITHUB_ENV"
 
 for var in $govars; do
-  echo "$var=$(go env "$var")" >>"$GITHUB_OUTPUT"
+  echo "$var=$(go env "$var")" >> "$GITHUB_OUTPUT"
 done
