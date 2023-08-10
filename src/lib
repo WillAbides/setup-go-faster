@@ -151,7 +151,7 @@ select_local_version() {
   fi
 
   # handle other constraints
-  local_matches="$(echo "$local_versions" | ./src/semver-select -c "$constraint" -n 1 -i -)"
+  local_matches="$(echo "$local_versions" | ./src/"semver-select" -c "$constraint" -n 1 -i -)"
   if [ -n "$local_matches" ]; then
     echo "$local_matches" | tail -1
   fi
@@ -172,7 +172,7 @@ select_remote_version() {
     return
   fi
 
-  echo "$versions" | ./src/semver-select -c "$constraint" -n 1 -i -
+  echo "$versions" | ./src/"semver-select" -c "$constraint" -n 1 -i -
 }
 
 select_go_version_from_file() {
