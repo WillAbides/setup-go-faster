@@ -184,7 +184,7 @@ select_go_version_from_file() {
     return 1
   fi
 
-  found_version="$(perl -nle 'print $1 if /^\s*go (\d\.\d+.*$)/' < "$go_file_path")"
+  found_version="$(perl -nle 'print $1 if /^\s*go\s+(\S+)\s*(?:$|(?:\/\/))/' < "$go_file_path")"
   if [ -z "$found_version" ]; then
     found_version="1.16"
   fi
