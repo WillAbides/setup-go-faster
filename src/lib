@@ -72,6 +72,7 @@ download_go_url() {
 install_go() {
   local go_version="$1"
   local target_dir="$2"
+  debug_out "installing go $go_version to $target_dir"
   rm -rf "$target_dir"
   mkdir -p "$(dirname "$target_dir")"
   tmpdir="$(init_tmpdir)"
@@ -113,8 +114,9 @@ exe_name() {
 }
 
 is_precise_version() {
-  [[ $1 =~ ^[0-9]+(.[0-9]+(.[0-9]+)?)?([A-Za-z0-9]+)?$ ]] && return
-  return 1
+  [[ $1 =~ ^[0-9]+(.([0-9]+)(.[0-9]+)?)?([A-Za-z0-9]+)?$ ]] || return 1
+  # false when minor is >= 21 and patch is empty
+  [ -z "${BASH_REMATCH[2]}" ] || [ "${BASH_REMATCH[2]}" -lt 21 ] || [ -n "${BASH_REMATCH[3]}" ]
 }
 
 select_go_version() {
@@ -149,7 +151,7 @@ select_local_version() {
   fi
 
   # handle other constraints
-  local_matches="$(echo "$local_versions" | ./src/semver-select -c "$constraint" -n 1 -i -)"
+  local_matches="$(echo "$local_versions" | ./src/"semver-select" --go -c "$constraint" -n 1 -i -)"
   if [ -n "$local_matches" ]; then
     echo "$local_matches" | tail -1
   fi
@@ -170,5 +172,29 @@ select_remote_version() {
     return
   fi
 
-  echo "$versions" | ./src/semver-select -c "$constraint" -n 1 -i -
+  echo "$versions" | ./src/"semver-select" --go -c "$constraint" -n 1 -i -
+}
+
+# uses semver-select to convert a go version to semver
+#  go1.2rc3 -> 1.2.0-rc3
+#  1.2.3rc3 -> 1.2.3-rc3
+normalize_go_version() {
+  ./src/"semver-select" --go -c '*-0' "$1"
+}
+
+select_go_version_from_file() {
+  local go_file_path="$1"
+
+  file_name="$(basename "$go_file_path")"
+  if [ "$file_name" != "go.mod" ] && [ "$file_name" != "go.work" ]; then
+    echo "::error ::File is not go.mod nor go.work"
+    return 1
+  fi
+
+  found_version="$(perl -nle 'print $1 if /^\s*go\s+(\S+)\s*(?:$|(?:\/\/))/' < "$go_file_path")"
+  if [ -z "$found_version" ]; then
+    found_version="1.16"
+  fi
+
+  normalize_go_version "$found_version"
 }

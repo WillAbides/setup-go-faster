@@ -2,6 +2,14 @@
 
 It's like actions/setup-go but faster.
 
+### A Note About Go 1.21.0
+
+**Use setup-go-faster@v1.9.1 or later** if you want to install Go 1.21.0.
+
+With the release of go1.21.0, the Go team has changed the way they style
+dot-zero releases. They used to be styled like `go1.N`, but now they are 
+`go1.N.0`. This caused issues with earlier versions of setup-go-faster.
+
 ### Faster
 
 Setup-go-faster takes about a third as long as setup-go to install go on a
@@ -57,8 +65,6 @@ accordingly. If there is good use case for `stable`, it can be added.
 
 ### go-version
 
-__Required__
-
 The version of go to install. It can be an exact version or a semver constraint like '1.14.x' or '^1.14.4'.
 Do not add "go" or "v" to the beginning of the version.
 
@@ -94,6 +100,13 @@ For those who learn best from examples:
 | ~1.15.4            | installs a go that is >= 1.15.4 and < 1.16                                                     |
 | < 1.15.6 >= 1.15.4 | installs a go that is >= 1.15.4 and < 1.15.6                                                   |
 | tip                | installs gotip  from source                                                                    |
+
+
+### go-version-file
+
+Path to a go.mod or go.work file. setup-go-faster will take the version from the "go" directive
+in this file and convert it to a semver minimum version. For example, if the go directive is `go 1.21rc1`,
+setup-go-faster will use the constraint `>= 1.21.0-rc1`.
 
 
 ### ignore-local

@@ -7,7 +7,7 @@ CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 . src/lib
 
-target_version="0.1.0"
+target_version="0.3.0"
 bin_path="./bin/semver-select"
 [ "$(goos)" = "windows" ] && bin_path+=".exe"
 
