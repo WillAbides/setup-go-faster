@@ -27,9 +27,6 @@ do_test_run() {
   export SKIP_MATCHER=1
   export IGNORE_LOCAL_GO=1
   export GOROOT=""
-  echo "****** start go env"
-  go env
-  echo "****** end go env"
   GO_VERSION="$CONSTRAINT" ./src/run
   WANT_GOROOT="$RUNNER_WORKSPACE/setup-go-faster/go/$WANT_VERSION/x64"
   if [ "$(goos)" = "windows" ]; then
@@ -37,9 +34,6 @@ do_test_run() {
     # Just check that is has the right suffix.
     WANT_GOROOT="setup-go-faster\\go\\$WANT_VERSION\\x64"
   fi
-  echo "start GITHUB_OUTPUT"
-  cat "$GITHUB_OUTPUT"
-  echo "end GITHUB_OUTPUT"
   assertContains "$(grep '^GOROOT=' "$GITHUB_OUTPUT")" "$WANT_GOROOT"
 }
 
