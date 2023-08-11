@@ -4,7 +4,9 @@ set -e
 
 CDPATH="" cd -- "$(dirname -- "$0")/.."
 
-. src/lib
+setUp() {
+  . src/lib
+}
 
 # Nothing special about this one. It just happens to be HEAD of main when writing this.
 # Most recent version is go1.21rc4
@@ -30,6 +32,11 @@ do_test_run() {
   echo "****** end go env"
   GO_VERSION="$CONSTRAINT" ./src/run
   WANT_GOROOT="$RUNNER_WORKSPACE/setup-go-faster/go/$WANT_VERSION/x64"
+  if [ "$(goos)" = "windows" ]; then
+    # Windows is trickier because of how it translates paths.
+    # Just check that is has the right suffix.
+    WANT_GOROOT="setup-go-faster\\go\\$WANT_VERSION\\x64"
+  fi
   echo "start GITHUB_OUTPUT"
   cat "$GITHUB_OUTPUT"
   echo "end GITHUB_OUTPUT"
