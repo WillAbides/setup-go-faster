@@ -37,9 +37,10 @@ GITHUB_PATH="${GITHUB_PATH:-/dev/null}"
 
 add_to_github_path "$target_dir/bin"
 PATH="$(add_to_system_path "$target_dir/bin")"
-echo PATH="$PATH"
 
-gopath=$(go env GOPATH)
+go_exec="$target_dir/bin/$(exe_name go)"
+
+gopath=$("$go_exec" env GOPATH)
 mkdir -p "$gopath/bin"
 
 add_to_github_path "$gopath/bin"
@@ -48,7 +49,7 @@ PATH="$(add_to_system_path "$gopath/bin")"
 unset GOROOT
 
 if [ -n "$INSTALL_GO_TIP" ]; then
-  GO111MODULE=off go get golang.org/dl/gotip
+  GO111MODULE=off "$go_exec" get golang.org/dl/gotip
   "$gopath/bin/$(exe_name gotip)" download
   rm -rf "$tip_target_dir"
   mkdir -p "$(dirname "$tip_target_dir")"
@@ -56,6 +57,7 @@ if [ -n "$INSTALL_GO_TIP" ]; then
 
   add_to_github_path "$tip_target_dir/bin"
   PATH="$(add_to_system_path "$tip_target_dir/bin")"
+  go_exec="$tip_target_dir/bin/$(exe_name go)"
 fi
 
 govars='GOCACHE
@@ -64,8 +66,8 @@ GOPATH
 GOROOT
 GOTOOLDIR'
 
-echo "GOROOT=$(go env GOROOT)" >> "$GITHUB_ENV"
+echo "GOROOT=$("$go_exec" env GOROOT)" >> "$GITHUB_ENV"
 
 for var in $govars; do
-  echo "$var=$(go env "$var")" >> "$GITHUB_OUTPUT"
+  echo "$var=$("$go_exec" env "$var")" >> "$GITHUB_OUTPUT"
 done
