@@ -1,9 +1,10 @@
 name: ci
 on:
   push:
+    branches: [ main ]
   workflow_dispatch:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened ]
 jobs:
   cibuild:
     name: cibuild
@@ -32,6 +33,8 @@ jobs:
       run:
         shell: bash
     steps:
+      - run: env
+      - run: go env
       - uses: actions/checkout@v3.3.0
       - run: script/bootstrap
       - run: script/test

@@ -93,47 +93,47 @@ test_select_go_version() {
   do_test_select_go_version "" "1.2.3"
   do_test_select_go_version "1.21.0" "1.21.x" "1.21.0"
   do_test_select_go_version "1.21.0" "1.21" "1.21.0"
-  do_test_select_go_version "1.20" "1.20.x" "1.20.0"
+  do_test_select_go_version "go1.20" "1.20.x" "go1.20"
 }
 
 test_select_remote_version() {
-  versions='1.15.7
-1.15.6
-1.14.3
-1.15.6
-1.15.5
-1.15.4
-1.15.3
-1.15.2
-1.15.1
-1.15
-1.14.3
-1.14.2
-1.14.1
-1.14
-1.13.3
-1.13.2
-1.13.1
-1.13
-1.3.3
-1.3.2
-1.3.1
-1.3
-1.2.2
-1
-1.16beta1
-1.16rc1'
+  versions='go1.15.7
+go1.15.6
+go1.14.3
+go1.15.6
+go1.15.5
+go1.15.4
+go1.15.3
+go1.15.2
+go1.15.1
+go1.15
+go1.14.3
+go1.14.2
+go1.14.1
+go1.14
+go1.13.3
+go1.13.2
+go1.13.1
+go1.13
+go1.3.3
+go1.3.2
+go1.3.1
+go1.3
+go1.2.2
+go1
+go1.16beta1
+go1.16rc1'
 
-  tests='*;1.15.7
+  tests='*;go1.15.7
 1.17.x;
 1.16.x;
-1.15;1.15
-1.15.x;1.15.7
-^1;1.15.7
+1.15;go1.15
+1.15.x;go1.15.7
+^1;go1.15.7
 ^1.15.999;
-1.13.x;1.13.3
-1.16beta1;1.16beta1
-x;1.15.7'
+1.13.x;go1.13.3
+1.16beta1;go1.16beta1
+x;go1.15.7'
 
   for td in $tests; do
     input="$(echo "$td" | cut -d ';' -f1)"

@@ -2,11 +2,19 @@
 
 # required global vars:
 # RUNNER_TOOL_CACHE         # provided by action
+# RUNNER_WORKSPACE          # provided by action
+# GITHUB_ACTION_PATH        # provided by action
+# GITHUB_OUTPUT             # provided by action
 #
 # optional vars:
 # GO_VERSION= version constraint
 # GO_VERSION_FILE= path to go.mod or go.work
-# INSTALL_GO_FORCE                                     # set to non-empty to force the install
+# INSTALL_GO_FORCE   # set to non-empty to force the install
+# IGNORE_LOCAL_GO    # set to non-empty to ignore local go installations
+#
+# for testing:
+# VERSIONS_URL       # override the url used to get the list of known versions
+# SKIP_MATCHER       # don't issue the add-matcher command because it breaks when running tests on windows
 
 set -e
 [ -n "$DEBUG" ] && set -x
@@ -14,6 +22,8 @@ set -e
 CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 . src/lib
+
+VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/WillAbides/goreleases/main/versions.txt}"
 
 debug_out starting run
 
@@ -49,25 +59,25 @@ mkdir -p "$go_tool_cache"
 
 if [ -z "$IGNORE_LOCAL_GO" ]; then
   lv="$(select_local_version "$constraint" "$install_parent")"
-  target_dir="$install_parent/$lv/x64"
+  target_dir="$install_parent/${lv#go}/x64"
 fi
 
 if [ -z "$IGNORE_LOCAL_GO" ] && [ -z "$lv" ]; then
   lv="$(select_local_version "$constraint" "$go_tool_cache")"
-  target_dir="$go_tool_cache/$lv/x64"
+  target_dir="$go_tool_cache/${lv#go}/x64"
 fi
 
 if [ -z "$lv" ]; then
   if is_precise_version "$constraint"; then
     lv="$constraint"
-    target_dir="$install_parent/$lv/x64"
+    target_dir="$install_parent/${lv#go}/x64"
   fi
 fi
 
 if [ -z "$lv" ]; then
-  known_versions="$(curl --retry 4 -s --fail 'https://raw.githubusercontent.com/WillAbides/goreleases/main/versions.txt')"
+  known_versions="$(curl --retry 4 -s --fail "$VERSIONS_URL")"
   lv="$(select_remote_version "$constraint" "$known_versions")"
-  target_dir="$install_parent/$lv/x64"
+  target_dir="$install_parent/${lv#go}/x64"
 fi
 
 if [ -z "$lv" ]; then
@@ -75,6 +85,6 @@ if [ -z "$lv" ]; then
   exit 1
 fi
 
-echo "::add-matcher::$GITHUB_ACTION_PATH/matchers.json"
+[ -n "$SKIP_MATCHER" ] || echo "::add-matcher::$GITHUB_ACTION_PATH/matchers.json"
 
 src/install-go "$lv" "$target_dir" "$install_parent/tip/x64"

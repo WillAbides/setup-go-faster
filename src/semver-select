@@ -5,24 +5,9 @@ set -e
 
 CDPATH="" cd -- "$(dirname -- "$0")/.."
 
-goos() {
-  case "$RUNNER_OS" in
-    macOS)
-      echo "darwin"
-      ;;
-    Linux)
-      echo "linux"
-      ;;
-    Windows)
-      echo "windows"
-      ;;
-    *)
-      uname -s | tr '[:upper:]' '[:lower:]'
-      ;;
-  esac
-}
+. src/lib
 
-target_version="0.3.0"
+target_version="0.4.0"
 bin_path="./bin/semver-select"
 [ "$(goos)" = "windows" ] && bin_path+=".exe"
 
