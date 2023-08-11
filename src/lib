@@ -70,7 +70,7 @@ download_go_url() {
 }
 
 install_go() {
-  local go_version="$1"
+  local go_version="${1#go}"
   local target_dir="$2"
   debug_out "installing go $go_version to $target_dir"
   rm -rf "$target_dir"
@@ -160,8 +160,6 @@ select_local_version() {
 select_remote_version() {
   local constraint="$1"
   local versions="$2"
-  # shellcheck disable=SC2001
-  versions="$(echo "$versions" | sed 's/^go//g')"
 
   if got="$(select_go_version "$constraint" "$versions")"; then
     echo "$got" && return
@@ -172,7 +170,7 @@ select_remote_version() {
     return
   fi
 
-  echo "$versions" | ./src/"semver-select" --go -c "$constraint" -n 1 -i -
+  echo "$versions" | ./src/"semver-select" --orig --go -c "$constraint" -n 1 -i -
 }
 
 # uses semver-select to convert a go version to semver

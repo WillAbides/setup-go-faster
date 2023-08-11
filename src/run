@@ -59,25 +59,25 @@ mkdir -p "$go_tool_cache"
 
 if [ -z "$IGNORE_LOCAL_GO" ]; then
   lv="$(select_local_version "$constraint" "$install_parent")"
-  target_dir="$install_parent/$lv/x64"
+  target_dir="$install_parent/${lv#go}/x64"
 fi
 
 if [ -z "$IGNORE_LOCAL_GO" ] && [ -z "$lv" ]; then
   lv="$(select_local_version "$constraint" "$go_tool_cache")"
-  target_dir="$go_tool_cache/$lv/x64"
+  target_dir="$go_tool_cache/${lv#go}/x64"
 fi
 
 if [ -z "$lv" ]; then
   if is_precise_version "$constraint"; then
     lv="$constraint"
-    target_dir="$install_parent/$lv/x64"
+    target_dir="$install_parent/${lv#go}/x64"
   fi
 fi
 
 if [ -z "$lv" ]; then
   known_versions="$(curl --retry 4 -s --fail "$VERSIONS_URL")"
   lv="$(select_remote_version "$constraint" "$known_versions")"
-  target_dir="$install_parent/$lv/x64"
+  target_dir="$install_parent/${lv#go}/x64"
 fi
 
 if [ -z "$lv" ]; then
