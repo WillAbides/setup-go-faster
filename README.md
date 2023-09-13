@@ -43,6 +43,12 @@ The performance improvements are achieved by:
   with, but if you use one of those formats you can shave an additional half
   second off the time.
 
+### Annotations for test failures
+
+Setup-go-faster adds annotations for test failures so they show up in your
+pull request. As of setup-go@v4.1.0, setup-go only adds annotations for
+build failures, not test failures.
+
 ### Install tip
 
 Setup-go-faster will install go tip from source if you set `go-version: tip`.
