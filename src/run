@@ -85,6 +85,11 @@ if [ -z "$lv" ]; then
   exit 1
 fi
 
-[ -n "$SKIP_MATCHER" ] || echo "::add-matcher::$GITHUB_ACTION_PATH/matchers.json"
+matchers="$GITHUB_ACTION_PATH/matchers.json"
+if [ -n "$ANNOTATE_TEST_LOGS" ]; then
+  matchers="$GITHUB_ACTION_PATH/test-matchers.json"
+fi
+
+[ -n "$SKIP_MATCHER" ] || echo "::add-matcher::$matchers"
 
 src/install-go "$lv" "$target_dir" "$install_parent/tip/x64"
