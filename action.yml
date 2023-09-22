@@ -53,6 +53,12 @@ inputs:
       of checking whether a newer version is available for download. With ignore-local, the
       action will always check for a newer version available for download. Set this to any non-empty value
       to enable.
+  annotate-test-logs:
+    required: false
+    description: |
+      If set to any non-empty value, logs output by tests will be annotated as test failures on your Pull Request.
+      This is useful if the only logging your tests do is on error. If you use `t.Log` outside of test failures,
+      you should not set this.
 outputs:
   GOCACHE:
     description: output of `go env GOCACHE`
@@ -79,6 +85,7 @@ runs:
         IGNORE_LOCAL_GO: ${{ inputs.ignore-local }}
         GO_VERSION: ${{ inputs.go-version }}
         GO_VERSION_FILE: ${{ inputs.go-version-file }}
+        ANNOTATE_TEST_LOGS: ${{ inputs.annotate-test-logs }}
       shell: bash
       run: src/run
 branding:
