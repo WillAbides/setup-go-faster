@@ -17,7 +17,7 @@ test_install_go() {
     version="1.15.4"
     install_go "$version" "$target"
     got_version="$("$target/bin/go" version)"
-    assertEquals "go version go1.15.4 $(goos)/amd64" "$got_version"
+    assertEquals "go version go1.15.4 $(go_system)" "$got_version"
   )
 }
 

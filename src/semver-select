@@ -22,7 +22,7 @@ download() {
   skip_download && return
   mkdir -p "$(dirname "$bin_path")"
   url="https://github.com/WillAbides/semver-select/releases/download/v"
-  url+="$target_version/semver-select_${target_version}_$(goos)_amd64"
+  url+="$target_version/semver-select_${target_version}_$(goos)_$(goarch)"
   [ "$(goos)" = "windows" ] && url+=".exe"
   curl -s --fail -o "$bin_path" --retry 4 -L "$url"
   chmod +x "$bin_path"

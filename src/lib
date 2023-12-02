@@ -4,6 +4,19 @@ set -e
 
 CDPATH="" cd -- "$(dirname -- "$0")/.."
 
+supported_system() {
+  grep -q "'$1'" <<< "
+'linux/386'
+'linux/amd64'
+'linux/arm64'
+'darwin/amd64'
+'darwin/arm64'
+'windows/386'
+'windows/amd64'
+'windows/arm64'
+"
+}
+
 goos() {
   case "$RUNNER_OS" in
     macOS)
@@ -19,6 +32,55 @@ goos() {
       uname -s | tr '[:upper:]' '[:lower:]'
       ;;
   esac
+}
+
+# get the arch from uname in case RUNNER_ARCH is not set
+# copied from https://github.com/client9/shlib
+uname_arch() {
+  arch=$(uname -m)
+  case $arch in
+    x86_64) arch="amd64" ;;
+    x86) arch="386" ;;
+    i686) arch="386" ;;
+    i386) arch="386" ;;
+    aarch64) arch="arm64" ;;
+    armv5*) arch="armv5" ;;
+    armv6*) arch="armv6" ;;
+    armv7*) arch="armv7" ;;
+  esac
+  echo ${arch}
+}
+
+# Get the arch to download. Use RUNNER_ARCH first, then uname if not set.
+goarch() {
+  case "$RUNNER_ARCH" in
+    X86)
+      echo "386"
+      ;;
+    X64)
+      echo "amd64"
+      ;;
+    ARM64)
+      echo "arm64"
+      ;;
+    *)
+      uname_arch
+      ;;
+  esac
+}
+
+go_system() {
+  echo "$(goos)/$(goarch)"
+}
+
+# returns the os part of os/arch
+system_os() {
+  echo "${1%%/*}"
+}
+
+# returns the arch part of os/arch
+system_arch() {
+  echo "${1##*/}"
 }
 
 debug_out() {
@@ -39,17 +101,14 @@ sdk_dir() {
   echo "$(homedir)/sdk"
 }
 
-extension() {
-  if [ "$(goos)" = "windows" ]; then
-    echo ".zip"
-  else
-    echo ".tar.gz"
-  fi
-}
-
 version_archive_name() {
   local version="$1"
-  echo "$version.$(goos)-amd64$(extension)"
+  local system="$2"
+  local extension=".tar.gz"
+  if [ "$(system_os "$system")" = "windows" ]; then
+    extension=".zip"
+  fi
+  echo "$version.$(system_os "$system")-$(system_arch "$system")$extension"
 }
 
 init_tmpdir() {
@@ -65,7 +124,8 @@ init_tmpdir() {
 
 download_go_url() {
   local go_version="$1"
-  archive_name="$(version_archive_name go"$go_version")"
+  local system="$2"
+  archive_name="$(version_archive_name go"$go_version" "$system")"
   echo "https://storage.googleapis.com/golang/$archive_name"
 }
 
@@ -73,18 +133,23 @@ install_go() {
   local go_version="${1#go}"
   local target_dir="$2"
   debug_out "installing go $go_version to $target_dir"
+  local system
+  system="$(go_system)"
+  if ! supported_system "$system"; then
+    echo "::error ::Unsupported system: $system"
+    return 1
+  fi
   rm -rf "$target_dir"
   mkdir -p "$(dirname "$target_dir")"
   tmpdir="$(init_tmpdir)"
   cd "$tmpdir"
 
-  archive_name="$(version_archive_name go"$go_version")"
+  archive_name="$(version_archive_name go"$go_version" "$system")"
 
   # 4 retries is 15 seconds of waiting
-  curl -s --retry 4 --fail -O "$(download_go_url "$go_version")"
+  curl -s --retry 4 --fail -O "$(download_go_url "$go_version" "$system")"
 
-  pwd
-  if [ "$(extension)" = ".zip" ]; then
+  if [ "${archive_name: -4}" == ".zip" ]; then
     7z x "$archive_name"
   else
     tar -xzf "$archive_name"
