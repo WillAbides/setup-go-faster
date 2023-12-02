@@ -45,6 +45,21 @@ Look at those outputs. If you want to use GOPATH or GOMODCACHE as input in some
 other step, you can just grab it from setup-go-faster\'s output instead of
 having to add another step just to set an environment variable.
 
+### Supported Systems
+
+Setup-go-faster supports these runner systems:
+
+| RUNNER_OS | RUNNER_ARCH | go system     |
+|-----------|-------------|---------------|
+| Linux     | X86         | linux/386     |
+| Linux     | X64         | linux/amd64   |
+| Linux     | ARM64       | linux/arm64   |
+| MacOS     | X64         | darwin/amd64  |
+| MacOS     | ARM64       | darwin/arm64  |
+| Windows   | X86         | windows/386   |
+| Windows   | X64         | windows/amd64 |
+| Windows   | ARM64       | windows/arm64 |
+
 ### What\'s missing?
 
 Just the `stable` input. I don\'t understand what `stable` adds for
