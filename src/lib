@@ -111,14 +111,11 @@ version_archive_name() {
   echo "$version.$(system_os "$system")-$(system_arch "$system")$extension"
 }
 
-init_tmpdir() {
+tmpdir_name() {
+  local dir_name="${1:-"tmp"}"
   local tmpdir="$RUNNER_WORKSPACE"
   tmpdir="${tmpdir:-"$TMPDIR"}"
-  tmpdir="$tmpdir/setup-go-faster/tmp"
-  mkdir -p "$tmpdir"
-  rm -rf "$tmpdir"
-  mkdir -p "$tmpdir"
-  trap 'rm -rf "$tmpdir"' EXIT
+  tmpdir="$tmpdir/setup-go-faster/$dir_name"
   echo "$tmpdir"
 }
 
@@ -132,6 +129,7 @@ download_go_url() {
 install_go() {
   local go_version="${1#go}"
   local target_dir="$2"
+  local tmpdir="$3"
   debug_out "installing go $go_version to $target_dir"
   local system
   system="$(go_system)"
@@ -141,7 +139,6 @@ install_go() {
   fi
   rm -rf "$target_dir"
   mkdir -p "$(dirname "$target_dir")"
-  tmpdir="$(init_tmpdir)"
   cd "$tmpdir"
 
   archive_name="$(version_archive_name go"$go_version" "$system")"
@@ -260,4 +257,41 @@ select_go_version_from_file() {
   fi
 
   normalize_go_version "$found_version"
+}
+
+get_known_versions() {
+  local versions_url="$1"
+  local tmp_dir="$2"
+  local file="$tmp_dir/versions.txt"
+  if [ -f "$file" ]; then
+    cat "$file"
+    return
+  fi
+  curl --retry 4 -s --fail -o "$file" "$versions_url"
+  cat "$file"
+}
+
+get_stable_minor_version() {
+  local versions_url="$1"
+  local tmp_dir="$2"
+  local versions
+  get_known_versions "$versions_url" "$tmp_dir" | grep -E '^go1\.[0-9]+(\.[0-9]+)?$' | head -1 | awk -F. '{print $2}'
+}
+
+resolve_constraint_alias() {
+  local constraint="$1"
+  local versions_url="$2"
+  local tmp_dir="$3"
+  case "$constraint" in
+    stable)
+      echo "1.$(get_stable_minor_version "$versions_url" "$tmp_dir").x"
+      ;;
+    oldstable)
+      minor_version="$(get_stable_minor_version "$versions_url" "$tmp_dir")"
+      echo "1.$((minor_version - 1)).x"
+      ;;
+    *)
+      echo "$constraint"
+      ;;
+  esac
 }

@@ -30,7 +30,12 @@ if [ -d "$target_dir" ]; then
   fi
 fi
 
-[ -n "$skip_install" ] || install_go "$install_go_version" "$target_dir"
+if [ -z "$skip_install" ]; then
+  tmp_dir="$(tmpdir_name tmp)"
+  trap 'rm -rf -- "$tmp_dir"' EXIT
+  mkdir -p -- "$tmp_dir"
+  install_go "$install_go_version" "$target_dir" "$tmp_dir"
+fi
 
 GITHUB_ENV="${GITHUB_ENV:-/dev/null}"
 GITHUB_PATH="${GITHUB_PATH:-/dev/null}"

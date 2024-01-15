@@ -35,9 +35,9 @@ do_test_run() {
   assertContains "$(grep '^GOROOT=' "$GITHUB_OUTPUT")" "$WANT_GOROOT"
 }
 
-test_run_1_15_x() {
-  GO_VERSION="1.15.x" \
-    WANT_VERSION="1.15.15" \
+test_run_1_16_x() {
+  GO_VERSION="1.16.x" \
+    WANT_VERSION="1.16.15" \
     do_test_run
 }
 
