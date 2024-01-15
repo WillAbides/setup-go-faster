@@ -59,6 +59,18 @@ test_run_1_21rc4() {
     do_test_run
 }
 
+test_run_stable() {
+  GO_VERSION="stable" \
+    WANT_VERSION="1.20.7" \
+    do_test_run
+}
+
+test_run_oldstable() {
+  GO_VERSION="oldstable" \
+    WANT_VERSION="1.19.12" \
+    do_test_run
+}
+
 test_go_mod() {
   GO_VERSION_FILE="$SHUNIT_TMPDIR"/test_go_mod/go.mod
   mkdir -p -- "$(dirname -- "$GO_VERSION_FILE")"

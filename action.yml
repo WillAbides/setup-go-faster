@@ -7,6 +7,10 @@ inputs:
       The version of go to install. It can be an exact version or a semver constraint like '1.14.x' or '^1.14.4'.
       Do not add "go" or "v" to the beginning of the version.
 
+      There are two aliases available: 'stable' and 'oldstable'. These aliases will be the newest Go release and the
+      next most recent. For instance when go1.21.6 is the latest release, 'stable' will resolve to '1.21.x' and
+      'oldstable' will resolve to '1.20.x'.
+
       Action runners come with some versions of go pre-installed. If any of those versions meet your semver constraint
       setup-go-faster will use those instead of checking whether a newer go available for download that meets your
       constraint. You can change this with the `ignore-local` input below.
@@ -38,6 +42,8 @@ inputs:
       | ^1.15.4            | installs a go that is >= 1.15.4 and < 2                                                        |
       | ~1.15.4            | installs a go that is >= 1.15.4 and < 1.16                                                     |
       | < 1.15.6 >= 1.15.4 | installs a go that is >= 1.15.4 and < 1.15.6                                                   |
+      | stable             | installs the newest go release                                                                 |
+      | oldstable          | installs the next most recent go release                                                       |
       | tip                | installs gotip  from source                                                                    |
 
   go-version-file:
