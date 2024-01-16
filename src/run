@@ -27,6 +27,10 @@ VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/WillAbides/gorel
 
 debug_out starting run
 
+tmp_dir="$(tmpdir_name runtmp)"
+trap 'rm -rf -- "$tmp_dir"' EXIT
+mkdir -p -- "$tmp_dir"
+
 export INSTALL_GO_TIP
 
 # shellcheck disable=2153 # false positive about GO_VERSION being a misspelling of go_version
@@ -46,6 +50,8 @@ if [ "$constraint" = "tip" ] || [ "$constraint" = "gotip" ]; then
   constraint='*'
   INSTALL_GO_TIP=1
 fi
+
+constraint="$(resolve_constraint_alias "$constraint" "$VERSIONS_URL" "$tmp_dir")"
 
 if [ -z "$constraint" ]; then
   constraint=">=$(select_go_version_from_file "$GITHUB_WORKSPACE/$GO_VERSION_FILE")"
@@ -75,7 +81,7 @@ if [ -z "$lv" ]; then
 fi
 
 if [ -z "$lv" ]; then
-  known_versions="$(curl --retry 4 -s --fail "$VERSIONS_URL")"
+  known_versions="$(get_known_versions "$VERSIONS_URL" "$tmp_dir")"
   lv="$(select_remote_version "$constraint" "$known_versions")"
   target_dir="$install_parent/${lv#go}/x64"
 fi

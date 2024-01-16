@@ -8,6 +8,10 @@ setUp() {
   . src/lib
 }
 
+# Nothing special about this one. It just happens to be HEAD of main when writing this.
+# Most recent version is go1.21rc4
+STABLE_VERSIONS_URL="https://raw.githubusercontent.com/WillAbides/goreleases/077db58ac86a8a2fb63c90817090e132eded0f3d/versions.txt"
+
 test_homedir() {
   (
     export USERPROFILE="windows home"
@@ -164,6 +168,12 @@ test_supported_system() {
   assertFalse "" 'supported_system ""'
   assertFalse " " 'supported_system " "'
 
+}
+
+test_resolve_constraint_alias() {
+  assertEquals "1.20.x" "$(resolve_constraint_alias "stable" "$STABLE_VERSIONS_URL" "$SHUNIT_TMPDIR")"
+  assertEquals "1.19.x" "$(resolve_constraint_alias "oldstable" "$STABLE_VERSIONS_URL" "$SHUNIT_TMPDIR")"
+  assertEquals "xxx" "$(resolve_constraint_alias "xxx" "$STABLE_VERSIONS_URL" "$SHUNIT_TMPDIR")"
 }
 
 . ./external/shunit2

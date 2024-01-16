@@ -60,12 +60,6 @@ Setup-go-faster supports these runner systems:
 | Windows   | X64         | windows/amd64 |
 | Windows   | ARM64       | windows/arm64 |
 
-### What\'s missing?
-
-Just the `stable` input. I don\'t understand what `stable` adds for
-actions/setup-go. If you only want stable builds you can set go-version
-accordingly. If there is good use case for `stable`, it can be added.
-
 ### A Note About Go 1.21.0
 
 **Use setup-go-faster@v1.9.1 or later** if you want to install Go 1.21.0.
@@ -82,6 +76,10 @@ dot-zero releases. They used to be styled like `go1.N`, but now they are
 
 The version of go to install. It can be an exact version or a semver constraint like '1.14.x' or '^1.14.4'.
 Do not add "go" or "v" to the beginning of the version.
+
+There are two aliases available: 'stable' and 'oldstable'. These aliases will be the newest Go release and the
+next most recent. For instance when go1.21.6 is the latest release, 'stable' will resolve to '1.21.x' and
+'oldstable' will resolve to '1.20.x'.
 
 Action runners come with some versions of go pre-installed. If any of those versions meet your semver constraint
 setup-go-faster will use those instead of checking whether a newer go available for download that meets your
@@ -114,6 +112,8 @@ For those who learn best from examples:
 | ^1.15.4            | installs a go that is >= 1.15.4 and < 2                                                        |
 | ~1.15.4            | installs a go that is >= 1.15.4 and < 1.16                                                     |
 | < 1.15.6 >= 1.15.4 | installs a go that is >= 1.15.4 and < 1.15.6                                                   |
+| stable             | installs the newest go release                                                                 |
+| oldstable          | installs the next most recent go release                                                       |
 | tip                | installs gotip  from source                                                                    |
 
 

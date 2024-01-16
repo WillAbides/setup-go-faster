@@ -35,9 +35,9 @@ do_test_run() {
   assertContains "$(grep '^GOROOT=' "$GITHUB_OUTPUT")" "$WANT_GOROOT"
 }
 
-test_run_1_15_x() {
-  GO_VERSION="1.15.x" \
-    WANT_VERSION="1.15.15" \
+test_run_1_16_x() {
+  GO_VERSION="1.16.x" \
+    WANT_VERSION="1.16.15" \
     do_test_run
 }
 
@@ -56,6 +56,18 @@ test_run_1_16rc1() {
 test_run_1_21rc4() {
   GO_VERSION="1.21rc4" \
     WANT_VERSION="1.21rc4" \
+    do_test_run
+}
+
+test_run_stable() {
+  GO_VERSION="stable" \
+    WANT_VERSION="1.20.7" \
+    do_test_run
+}
+
+test_run_oldstable() {
+  GO_VERSION="oldstable" \
+    WANT_VERSION="1.19.12" \
     do_test_run
 }
 
