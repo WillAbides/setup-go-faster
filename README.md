@@ -15,7 +15,7 @@ August 2023.
 | ubuntu-20.04 | 1.20.7     |          8s |              3s |          5s |
 | macos-11     | 1.20.7     |         34s |             12s |         22s |
 | windows-2022 | 1.20.7     |         80s |             12s |         68s |
-| ubuntu20.04  | tip        | unsupported |            311s |           ∞ |
+| ubuntu-20.04 | tip        | unsupported |            311s |           ∞ |
 | macos-11     | tip        | unsupported |            313s |           ∞ |
 | windows-2022 | tip        | unsupported |            576s |           ∞ |
 
@@ -98,7 +98,7 @@ There are a some gotchas to watch out for:
   handle constraints for post 1.21 the same as pre 1.21. This may change in a future major version.
 
 - Go's pre-releases are not valid semver. For example the beta for 1.16 is 1.16beta1. This means pre-releases
-  need to be explicitely specified.
+  need to be explicitly specified.
 
 For those who learn best from examples:
 
