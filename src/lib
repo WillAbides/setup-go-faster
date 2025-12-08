@@ -123,7 +123,7 @@ download_go_url() {
   local go_version="$1"
   local system="$2"
   archive_name="$(version_archive_name go"$go_version" "$system")"
-  echo "https://storage.googleapis.com/golang/$archive_name"
+  echo "https://go.dev/dl/$archive_name"
 }
 
 install_go() {
@@ -144,7 +144,7 @@ install_go() {
   archive_name="$(version_archive_name go"$go_version" "$system")"
 
   # 4 retries is 15 seconds of waiting
-  curl -s --retry 4 --fail -O "$(download_go_url "$go_version" "$system")"
+  curl -s --retry 4 --fail -L -O "$(download_go_url "$go_version" "$system")"
 
   if [ "${archive_name: -4}" == ".zip" ]; then
     7z x "$archive_name"
