@@ -30,14 +30,14 @@ test_download_go_url() {
     assertEquals "$want_url" "$got_url"
   }
 
-  run_test linux/amd64 1.15.5 "https://storage.googleapis.com/golang/go1.15.5.linux-amd64.tar.gz"
-  run_test linux/386 1.15.5 "https://storage.googleapis.com/golang/go1.15.5.linux-386.tar.gz"
-  run_test linux/arm64 1.15.5 "https://storage.googleapis.com/golang/go1.15.5.linux-arm64.tar.gz"
-  run_test darwin/amd64 1.15.5 "https://storage.googleapis.com/golang/go1.15.5.darwin-amd64.tar.gz"
-  run_test darwin/arm64 1.15.5 "https://storage.googleapis.com/golang/go1.15.5.darwin-arm64.tar.gz"
-  run_test windows/amd64 1.15.5 "https://storage.googleapis.com/golang/go1.15.5.windows-amd64.zip"
-  run_test windows/386 1.15.5 "https://storage.googleapis.com/golang/go1.15.5.windows-386.zip"
-  run_test windows/arm64 1.15.5 "https://storage.googleapis.com/golang/go1.15.5.windows-arm64.zip"
+  run_test linux/amd64 1.15.5 "https://go.dev/dl/go1.15.5.linux-amd64.tar.gz"
+  run_test linux/386 1.15.5 "https://go.dev/dl/go1.15.5.linux-386.tar.gz"
+  run_test linux/arm64 1.15.5 "https://go.dev/dl/go1.15.5.linux-arm64.tar.gz"
+  run_test darwin/amd64 1.15.5 "https://go.dev/dl/go1.15.5.darwin-amd64.tar.gz"
+  run_test darwin/arm64 1.15.5 "https://go.dev/dl/go1.15.5.darwin-arm64.tar.gz"
+  run_test windows/amd64 1.15.5 "https://go.dev/dl/go1.15.5.windows-amd64.zip"
+  run_test windows/386 1.15.5 "https://go.dev/dl/go1.15.5.windows-386.zip"
+  run_test windows/arm64 1.15.5 "https://go.dev/dl/go1.15.5.windows-arm64.zip"
 }
 
 test_is_precise_version() {
