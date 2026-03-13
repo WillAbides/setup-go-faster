@@ -54,7 +54,7 @@ PATH="$(add_to_system_path "$gopath/bin")"
 unset GOROOT
 
 if [ -n "$INSTALL_GO_TIP" ]; then
-  GO111MODULE=off "$go_exec" get golang.org/dl/gotip
+  GO111MODULE=on "$go_exec" install golang.org/dl/gotip@latest
   "$gopath/bin/$(exe_name gotip)" download
   rm -rf "$tip_target_dir"
   mkdir -p "$(dirname "$tip_target_dir")"
