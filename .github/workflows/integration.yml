@@ -13,7 +13,7 @@ jobs:
       matrix:
         os:
           - ubuntu-24.04
-          - windows-2022
+          - windows-2025
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -43,7 +43,8 @@ jobs:
         os:
           - ubuntu-24.04
           - ubuntu-22.04
-          - windows-2022
+          - ubuntu-slim
+          - windows-2025
           - macos-26-intel
     runs-on: ${{ matrix.os }}
     defaults:
@@ -180,14 +181,33 @@ jobs:
           [[ '${{steps.setup_go_1_21.outputs.GOROOT}}' == *"1.21.0"* ]]
           [[ '${{steps.setup_go_1_21.outputs.GOTOOLDIR}}' == *"1.21.0"* ]]
 
+      - id: setup_go_1.26.1
+        name: install 1.26.1
+        uses: ./
+        with:
+          go-version: '1.26.1'
+          ignore-local: true
+      - name: outputs
+        run: |
+          echo '*********** env ************'
+          env
+          echo '*********** go env ***********'
+          go env
+          echo '${{ toJson( steps.setup_go_1_26_1.outputs ) }}' | jq .
+          go version
+          set -ex
+          [[ "$(go version)" == *"1.26.1"* ]]
+          [[ '${{steps.setup_go_1_26_1.outputs.GOROOT}}' == *"1.26.1"* ]]
+          [[ '${{steps.setup_go_1_26_1.outputs.GOTOOLDIR}}' == *"1.26.1"* ]]
+
       - name: create_go_mod 1.15
         run: |
           mkdir -p tmp/go_mod_1_15
           cat >> tmp/go_mod_1_15/go.mod << EOF
           module example.com/some-module
- 
+          
           go 1.15
- 
+          
           require (
             golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691
             golang.org/x/sync v0.3.0
