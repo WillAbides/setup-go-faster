@@ -8,12 +8,12 @@ on:
 jobs:
   cibuild:
     name: cibuild
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v6
       - run: script/bootstrap
       - run: script/generate --check
       - run: script/lint
@@ -24,10 +24,10 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-20.04
+          - ubuntu-24.04
           - ubuntu-22.04
           - windows-2022
-          - macos-11
+          - macos-14
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -35,7 +35,7 @@ jobs:
     steps:
       - run: env
       - run: go env
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v6
       - run: script/bootstrap
       - run: script/test
       - run: script/test -long

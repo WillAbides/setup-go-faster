@@ -12,14 +12,14 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-22.04
+          - ubuntu-24.04
           - windows-2022
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v6
       - id: setup_go
         name: install tip
         uses: ./
@@ -41,16 +41,16 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-20.04
+          - ubuntu-24.04
           - ubuntu-22.04
           - windows-2022
-          - macos-11
+          - macos-14
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v6
       - id: setup_go_1_15_5
         name: install 1.15.5
         uses: ./
