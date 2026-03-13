@@ -44,7 +44,7 @@ jobs:
           - ubuntu-24.04
           - ubuntu-22.04
           - windows-2022
-          - macos-14
+          - macos-14-large
     runs-on: ${{ matrix.os }}
     defaults:
       run:
