@@ -26,7 +26,9 @@ jobs:
         os:
           - ubuntu-24.04
           - ubuntu-22.04
+          - ubuntu-slim
           - windows-2022
+          - windows-2025
           - macos-14
           - macos-15
           - macos-26
