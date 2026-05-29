@@ -1,0 +1,79 @@
+# fixture-008 copy of install-go (random nonce: irJ76+Vdmu8mLnA+pTF2C/Oshyn9r1dCaQCCjDX/80Q=)
+#!/bin/bash
+
+# required global vars:
+# RUNNER_TOOL_CACHE         # provided by action
+# GITHUB_OUTPUT             # provided by action
+#
+# optional vars:
+# INSTALL_GO_FORCE                                     # set to non-empty to force the install
+
+set -e
+[ -n "$DEBUG" ] && set -x
+
+CDPATH="" cd -- "$(dirname -- "$0")/.."
+
+. src/lib
+
+install_go_version="$1"
+target_dir="$2"
+tip_target_dir="$3"
+
+debug_out starting install-go
+
+export GOROOT=""
+export GO111MODULE=off
+
+if [ -d "$target_dir" ]; then
+  echo "$target_dir" already exists
+  if [ -z "$INSTALL_GO_FORCE" ]; then
+    skip_install=1
+  fi
+fi
+
+if [ -z "$skip_install" ]; then
+  tmp_dir="$(tmpdir_name tmp)"
+  trap 'rm -rf -- "$tmp_dir"' EXIT
+  mkdir -p -- "$tmp_dir"
+  install_go "$install_go_version" "$target_dir" "$tmp_dir"
+fi
+
+GITHUB_ENV="${GITHUB_ENV:-/dev/null}"
+GITHUB_PATH="${GITHUB_PATH:-/dev/null}"
+
+add_to_github_path "$target_dir/bin"
+PATH="$(add_to_system_path "$target_dir/bin")"
+
+go_exec="$target_dir/bin/$(exe_name go)"
+
+gopath=$("$go_exec" env GOPATH)
+mkdir -p "$gopath/bin"
+
+add_to_github_path "$gopath/bin"
+PATH="$(add_to_system_path "$gopath/bin")"
+
+unset GOROOT
+
+if [ -n "$INSTALL_GO_TIP" ]; then
+  GO111MODULE=on "$go_exec" install golang.org/dl/gotip@latest
+  "$gopath/bin/$(exe_name gotip)" download
+  rm -rf "$tip_target_dir"
+  mkdir -p "$(dirname "$tip_target_dir")"
+  mv "$(sdk_dir)/gotip" "$tip_target_dir"
+
+  add_to_github_path "$tip_target_dir/bin"
+  PATH="$(add_to_system_path "$tip_target_dir/bin")"
+  go_exec="$tip_target_dir/bin/$(exe_name go)"
+fi
+
+govars='GOCACHE
+GOMODCACHE
+GOPATH
+GOROOT
+GOTOOLDIR'
+
+echo "GOROOT=$("$go_exec" env GOROOT)" >> "$GITHUB_ENV"
+
+for var in $govars; do
+  echo "$var=$("$go_exec" env "$var")" >> "$GITHUB_OUTPUT"
+done

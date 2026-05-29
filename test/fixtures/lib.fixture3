@@ -1,0 +1,298 @@
+# fixture-003 copy of lib (random nonce: 9Gs8MiSVXhJhEv3HvYB1vrq6c0sOxBYEsCl5NwKwevk=)
+#!/bin/bash
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$0")/.."
+
+supported_system() {
+  grep -q "'$1'" <<< "
+'linux/386'
+'linux/amd64'
+'linux/arm64'
+'darwin/amd64'
+'darwin/arm64'
+'windows/386'
+'windows/amd64'
+'windows/arm64'
+"
+}
+
+goos() {
+  case "$RUNNER_OS" in
+    macOS)
+      echo "darwin"
+      ;;
+    Linux)
+      echo "linux"
+      ;;
+    Windows)
+      echo "windows"
+      ;;
+    *)
+      uname -s | tr '[:upper:]' '[:lower:]'
+      ;;
+  esac
+}
+
+# get the arch from uname in case RUNNER_ARCH is not set
+# copied from https://github.com/client9/shlib
+uname_arch() {
+  arch=$(uname -m)
+  case $arch in
+    x86_64) arch="amd64" ;;
+    x86) arch="386" ;;
+    i686) arch="386" ;;
+    i386) arch="386" ;;
+    aarch64) arch="arm64" ;;
+    armv5*) arch="armv5" ;;
+    armv6*) arch="armv6" ;;
+    armv7*) arch="armv7" ;;
+  esac
+  echo ${arch}
+}
+
+# Get the arch to download. Use RUNNER_ARCH first, then uname if not set.
+goarch() {
+  case "$RUNNER_ARCH" in
+    X86)
+      echo "386"
+      ;;
+    X64)
+      echo "amd64"
+      ;;
+    ARM64)
+      echo "arm64"
+      ;;
+    *)
+      uname_arch
+      ;;
+  esac
+}
+
+go_system() {
+  echo "$(goos)/$(goarch)"
+}
+
+# returns the os part of os/arch
+system_os() {
+  echo "${1%%/*}"
+}
+
+# returns the arch part of os/arch
+system_arch() {
+  echo "${1##*/}"
+}
+
+debug_out() {
+  if [ -n "$DEBUG" ]; then
+    echo "$@" >&2
+  fi
+}
+
+homedir() {
+  if [ "$(goos)" = "windows" ]; then
+    echo "$USERPROFILE"
+  else
+    echo "$HOME"
+  fi
+}
+
+sdk_dir() {
+  echo "$(homedir)/sdk"
+}
+
+version_archive_name() {
+  local version="$1"
+  local system="$2"
+  local extension=".tar.gz"
+  if [ "$(system_os "$system")" = "windows" ]; then
+    extension=".zip"
+  fi
+  echo "$version.$(system_os "$system")-$(system_arch "$system")$extension"
+}
+
+tmpdir_name() {
+  local dir_name="${1:-"tmp"}"
+  local tmpdir="$RUNNER_WORKSPACE"
+  tmpdir="${tmpdir:-"$TMPDIR"}"
+  tmpdir="$tmpdir/setup-go-faster/$dir_name"
+  echo "$tmpdir"
+}
+
+download_go_url() {
+  local go_version="$1"
+  local system="$2"
+  archive_name="$(version_archive_name go"$go_version" "$system")"
+  echo "https://go.dev/dl/$archive_name"
+}
+
+install_go() {
+  local go_version="${1#go}"
+  local target_dir="$2"
+  local tmpdir="$3"
+  debug_out "installing go $go_version to $target_dir"
+  local system
+  system="$(go_system)"
+  if ! supported_system "$system"; then
+    echo "::error ::Unsupported system: $system"
+    return 1
+  fi
+  rm -rf "$target_dir"
+  mkdir -p "$(dirname "$target_dir")"
+  cd "$tmpdir"
+
+  archive_name="$(version_archive_name go"$go_version" "$system")"
+
+  # 4 retries is 15 seconds of waiting
+  curl -s --retry 4 --fail -L -O "$(download_go_url "$go_version" "$system")"
+
+  if [ "${archive_name: -4}" == ".zip" ]; then
+    7z x "$archive_name"
+  else
+    tar -xzf "$archive_name"
+  fi
+  mv "go" "$target_dir"
+
+  cd - > /dev/null
+}
+
+add_to_system_path() {
+  element="$1"
+  if [ "$(goos)" == "windows" ]; then
+    element="$(echo "/$element" | sed -e 's|\\|/|g' | sed 's/://')"
+  fi
+  echo "$element:$PATH"
+}
+
+add_to_github_path() {
+  element="$1"
+  echo "$element" >> "$GITHUB_PATH"
+}
+
+exe_name() {
+  suffix=""
+  [ "$(goos)" = "windows" ] && suffix=".exe"
+  echo "$1$suffix"
+}
+
+is_precise_version() {
+  [[ $1 =~ ^[0-9]+(.([0-9]+)(.[0-9]+)?)?([A-Za-z0-9]+)?$ ]] || return 1
+  # false when minor is >= 21 and patch is empty
+  [ -z "${BASH_REMATCH[2]}" ] || [ "${BASH_REMATCH[2]}" -lt 21 ] || [ -n "${BASH_REMATCH[3]}" ]
+}
+
+select_go_version() {
+  local constraint="$1"
+  local versions="$2"
+  local got
+  got="$(echo "$versions" | ./src/select_go_version.pl "$constraint")" || return
+  echo "$got"
+}
+
+select_local_version() {
+  local constraint="$1"
+  local go_tool_cache="$2"
+  local local_versions
+  local_versions="$(ls "$go_tool_cache")"
+
+  # if this is a plain version instead of a constraint, only an exact match will work
+  if is_precise_version "$constraint"; then
+    for v in $local_versions; do
+      if [ "$v" = "$constraint" ]; then
+        echo "$v" && return
+      fi
+    done
+    return
+  fi
+
+  # handle the 1.x type constraint
+  if ver="$(select_go_version "$constraint" "$local_versions")"; then
+    if [ -n "$ver" ]; then
+      echo "$ver" && return
+    fi
+  fi
+
+  # handle other constraints
+  local_matches="$(echo "$local_versions" | ./src/"semver-select" --go -c "$constraint" -n 1 -i -)"
+  if [ -n "$local_matches" ]; then
+    echo "$local_matches" | tail -1
+  fi
+}
+
+select_remote_version() {
+  local constraint="$1"
+  local versions="$2"
+
+  if got="$(select_go_version "$constraint" "$versions")"; then
+    echo "$got" && return
+  fi
+
+  # don't try semver-select on a precise version
+  if is_precise_version "$constraint"; then
+    return
+  fi
+
+  echo "$versions" | ./src/"semver-select" --orig --go -c "$constraint" -n 1 -i -
+}
+
+# uses semver-select to convert a go version to semver
+#  go1.2rc3 -> 1.2.0-rc3
+#  1.2.3rc3 -> 1.2.3-rc3
+normalize_go_version() {
+  ./src/"semver-select" --go -c '*-0' "$1"
+}
+
+select_go_version_from_file() {
+  local go_file_path="$1"
+
+  file_name="$(basename "$go_file_path")"
+  if [ "$file_name" != "go.mod" ] && [ "$file_name" != "go.work" ]; then
+    echo "::error ::File is not go.mod nor go.work"
+    return 1
+  fi
+
+  found_version="$(perl -nle 'print $1 if /^\s*go\s+(\S+)\s*(?:$|(?:\/\/))/' < "$go_file_path")"
+  if [ -z "$found_version" ]; then
+    found_version="1.16"
+  fi
+
+  normalize_go_version "$found_version"
+}
+
+get_known_versions() {
+  local versions_url="$1"
+  local tmp_dir="$2"
+  local file="$tmp_dir/versions.txt"
+  if [ -f "$file" ]; then
+    cat "$file"
+    return
+  fi
+  curl --retry 4 -s --fail -o "$file" "$versions_url"
+  cat "$file"
+}
+
+get_stable_minor_version() {
+  local versions_url="$1"
+  local tmp_dir="$2"
+  local versions
+  get_known_versions "$versions_url" "$tmp_dir" | grep -E '^go1\.[0-9]+(\.[0-9]+)?$' | head -1 | awk -F. '{print $2}'
+}
+
+resolve_constraint_alias() {
+  local constraint="$1"
+  local versions_url="$2"
+  local tmp_dir="$3"
+  case "$constraint" in
+    stable)
+      echo "1.$(get_stable_minor_version "$versions_url" "$tmp_dir").x"
+      ;;
+    oldstable)
+      minor_version="$(get_stable_minor_version "$versions_url" "$tmp_dir")"
+      echo "1.$((minor_version - 1)).x"
+      ;;
+    *)
+      echo "$constraint"
+      ;;
+  esac
+}

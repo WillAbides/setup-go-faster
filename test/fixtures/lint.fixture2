@@ -1,0 +1,11 @@
+# fixture-020 copy of lint (random nonce: zB1aW+jUxUZ5stYWfbs2KWbxe1riNT6oK3LdO/JcEes=)
+#!/bin/sh
+#/ script/lint runs linters on the project.
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$0")/.."
+
+script/bindown -q install shellcheck
+
+bin/shellcheck -e SC1071 -x ./script/* ./src/*

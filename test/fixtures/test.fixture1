@@ -1,0 +1,18 @@
+# fixture-016 copy of test (random nonce: jMS4R88YE644Cj4hRRi5roBlJcdCSfLT3NnfvlTxOpU=)
+#!/bin/sh
+#/ script/test runs tests on the project.
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$0")/.."
+
+if [ "$1" = "-long" ]; then
+  for f in ./src/*_test_long.*; do
+    "$f"
+  done
+  exit
+fi
+
+for f in ./src/*_test.*; do
+  "$f"
+done

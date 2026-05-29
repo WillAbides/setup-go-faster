@@ -1,0 +1,11 @@
+# fixture-014 copy of bootstrap (random nonce: jP9wrjn3VPk6qV3cmh+Km9CdtCbz1Cob0541p/rYHV0=)
+#!/bin/sh
+#/ script/bootstrap installs dependencies for testing and development.
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$0")/.."
+
+mkdir -p ./external
+
+script/bindown install --output ./external/shunit2 shunit2
