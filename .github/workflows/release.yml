@@ -1,0 +1,88 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check-pr:
+    name: check-pr
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: release-train (check-pr)
+        uses: WillAbides/release-train@cd01ea9e19bb396bf659f61e1c840c5174b92de8 # v3.8.5
+        with:
+          release-refs: main
+
+  publish:
+    name: publish
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+      - name: release-train
+        id: release
+        uses: WillAbides/release-train@cd01ea9e19bb396bf659f61e1c840c5174b92de8 # v3.8.5
+        with:
+          create-tag: true
+          create-release: true
+          release-refs: main
+      - name: Advance major version branch
+        if: steps.release.outputs.created-tag == 'true'
+        env:
+          TAG: ${{ steps.release.outputs.release-tag }}
+        run: |
+          set -euo pipefail
+
+          case "$TAG" in
+            *-*)
+              echo "Prerelease $TAG; not advancing major branch." >&2
+              exit 0
+              ;;
+          esac
+
+          case "$TAG" in
+            v[0-9]*.[0-9]*.[0-9]*) ;;
+            *)
+              echo "Unexpected release tag shape: $TAG" >&2
+              exit 1
+              ;;
+          esac
+
+          major="${TAG%%.*}"
+          commit="$(git rev-list -n1 "$TAG")"
+
+          git fetch origin "$major" 2>/dev/null || true
+
+          if git show-ref --verify --quiet "refs/remotes/origin/$major"; then
+            if ! git merge-base --is-ancestor "origin/$major" "$commit"; then
+              echo "Refusing to move $major non-fast-forward to $TAG" >&2
+              echo "  current origin/$major: $(git rev-parse origin/$major)" >&2
+              echo "  new commit:            $commit" >&2
+              exit 1
+            fi
+          fi
+
+          git push origin "$commit:refs/heads/$major"
