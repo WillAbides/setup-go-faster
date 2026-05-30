@@ -7,8 +7,8 @@ on:
 permissions: {}
 
 jobs:
-  check-pr:
-    name: check-pr
+  releasable:
+    name: releasable
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -18,24 +18,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - name: Download release-train binary
-        id: rt
-        env:
-          RT_VERSION: '3.8.5'
-          RT_SHA256: '78d942e422f64089c92b54165023d64416b677b600244486579110f76a64c516'
-        run: |
-          set -euo pipefail
-          url="https://github.com/WillAbides/release-train/releases/download/v${RT_VERSION}/release-train_${RT_VERSION}_linux_amd64.tar.gz"
-          dest="$RUNNER_TEMP/release-train"
-          mkdir -p "$dest"
-          cd "$dest"
-          curl --fail --silent --show-error --location --output rt.tar.gz "$url"
-          echo "${RT_SHA256}  rt.tar.gz" | sha256sum -c -
-          tar -xzf rt.tar.gz
-          chmod +x release-train
-          echo "bin=$dest/release-train" >>"$GITHUB_OUTPUT"
       - name: release-train (check-pr)
-        uses: WillAbides/release-train@cd01ea9e19bb396bf659f61e1c840c5174b92de8 # v3.8.5
+        uses: WillAbides/release-train@a234a745371bf2fef3d64d74e1e9381aa9e6d4f8 # v3.8.6
         with:
-          release-train-bin: ${{ steps.rt.outputs.bin }}
           release-refs: main
