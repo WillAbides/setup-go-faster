@@ -6,5 +6,7 @@ set -e
 CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 script/bindown -q install shellcheck
+script/bindown -q install zizmor
 
 bin/shellcheck -e SC1071 -x ./script/* ./src/*
+bin/zizmor --no-progress .github/workflows/

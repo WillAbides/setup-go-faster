@@ -22,23 +22,27 @@ dependencies:
       ref: ebc4baa08f045b7ef0f45c4b7d6f34f08d732f3d
     required_vars:
       - ref
+  zizmor:
+    template: zizmor
+    vars:
+      version: 1.25.2
 templates:
   action-doc:
     url: https://github.com/WillAbides/action-doc/releases/download/v{{.version}}/action-doc_{{.version}}_{{.os}}_{{.arch}}.tar.gz
+    overrides:
+      - matcher:
+          arch:
+            - arm64
+          os:
+            - darwin
+        dependency:
+          vars:
+            arch: amd64
     systems:
       - darwin/amd64
       - darwin/arm64
       - linux/386
       - linux/amd64
-    overrides:
-      - matcher:
-          os:
-            - darwin
-          arch:
-            - arm64
-        dependency:
-          vars:
-            arch: amd64
     required_vars:
       - version
   origin#shellcheck:
@@ -107,6 +111,23 @@ templates:
       - windows/amd64
     required_vars:
       - version
+  zizmor:
+    homepage: https://docs.zizmor.sh/
+    description: Static analysis for GitHub Actions
+    url: https://github.com/zizmorcore/zizmor/releases/download/v{{.version}}/zizmor-{{.arch}}-{{.os}}.tar.gz
+    substitutions:
+      arch:
+        amd64: x86_64
+        arm64: aarch64
+      os:
+        darwin: apple-darwin
+        linux: unknown-linux-gnu
+    systems:
+      - darwin/amd64
+      - darwin/arm64
+      - linux/amd64
+    required_vars:
+      - version
 template_sources:
   action-doc: https://raw.githubusercontent.com/WillAbides/action-doc/main/bindown.yml
   origin: https://raw.githubusercontent.com/WillAbides/bindown-templates/master/bindown.yml
@@ -119,3 +140,6 @@ url_checksums:
   https://github.com/mvdan/sh/releases/download/v3.6.0/shfmt_v3.6.0_darwin_amd64: b8c9c025b498e2816b62f0b717f6032e9ab49e725a45b8205f52f66318f17185
   https://github.com/mvdan/sh/releases/download/v3.6.0/shfmt_v3.6.0_darwin_arm64: 633f242246ee0a866c5f5df25cbf61b6af0d5e143555aca32950059cf13d91e0
   https://github.com/mvdan/sh/releases/download/v3.6.0/shfmt_v3.6.0_linux_amd64: 5741a02a641de7e56b8da170e71a97e58050d66a3cf485fb268d6a5a8bb74afb
+  https://github.com/zizmorcore/zizmor/releases/download/v1.25.2/zizmor-aarch64-apple-darwin.tar.gz: 624ef0e09521aecd862126be0f6d7754669af2646750d68ac48a114be33c3146
+  https://github.com/zizmorcore/zizmor/releases/download/v1.25.2/zizmor-x86_64-apple-darwin.tar.gz: 353271b9ec301dd4ba158af481323c831c6e9b494d5ac3f5aa58cf4b207699cc
+  https://github.com/zizmorcore/zizmor/releases/download/v1.25.2/zizmor-x86_64-unknown-linux-gnu.tar.gz: aa1facd105f0d83fe5c55b1adcd9d7417de5d83aa27471f91dc0b66cf3803577
