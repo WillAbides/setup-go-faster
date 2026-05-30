@@ -48,7 +48,7 @@ uname_arch() {
     armv6*) arch="armv6" ;;
     armv7*) arch="armv7" ;;
   esac
-  echo ${arch}
+  echo "${arch}"
 }
 
 # Get the arch to download. Use RUNNER_ARCH first, then uname if not set.
