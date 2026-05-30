@@ -17,6 +17,9 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -29,8 +32,79 @@ jobs:
           create-tag: true
           create-release: true
           release-refs: main
+      - name: Decide whether to publish release artifacts
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CREATED_TAG: ${{ steps.release.outputs.created-tag }}
+          TAG: ${{ steps.release.outputs.release-tag }}
+        run: |
+          set -euo pipefail
+
+          publish=false
+          if [ "$CREATED_TAG" = "true" ]; then
+            publish=true
+          elif [ -n "$TAG" ]; then
+            # Re-run path: the tag was created on a prior run. Only publish
+            # if that tag still points at the commit we just built and a
+            # GitHub Release exists for it.
+            tag_commit="$(gh api "repos/$GITHUB_REPOSITORY/commits/$TAG" --jq '.sha' 2>/dev/null || true)"
+            if [ -n "$tag_commit" ] \
+               && [ "$tag_commit" = "$GITHUB_SHA" ] \
+               && gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              publish=true
+            fi
+          fi
+
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+      - name: Build source tarball
+        if: steps.publish.outputs.publish == 'true'
+        id: tarball
+        env:
+          TAG: ${{ steps.release.outputs.release-tag }}
+        run: |
+          set -euo pipefail
+
+          version="${TAG#v}"
+          prefix="setup-go-faster-${version}"
+          tarball_name="${prefix}-source.tar.gz"
+          tarball_path="${RUNNER_TEMP}/${tarball_name}"
+
+          # Sanity check: the tag we're about to archive must point at the
+          # commit this workflow is building. If a future change moves HEAD
+          # between release-train and here, fail loudly instead of silently
+          # publishing the wrong bytes.
+          git fetch --no-tags origin "refs/tags/${TAG}:refs/tags/${TAG}" 2>/dev/null || true
+          tag_commit="$(git rev-parse "${TAG}^{commit}")"
+          if [ "$tag_commit" != "$GITHUB_SHA" ]; then
+            echo "Tag $TAG points at $tag_commit but workflow commit is $GITHUB_SHA" >&2
+            exit 1
+          fi
+
+          git archive \
+            --format=tar.gz \
+            --prefix="${prefix}/" \
+            -o "$tarball_path" \
+            "${TAG}^{commit}"
+
+          echo "name=${tarball_name}" >> "$GITHUB_OUTPUT"
+          echo "path=${tarball_path}" >> "$GITHUB_OUTPUT"
+      - name: Attest source tarball
+        if: steps.publish.outputs.publish == 'true'
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        with:
+          subject-path: ${{ steps.tarball.outputs.path }}
+      - name: Upload source tarball to release
+        if: steps.publish.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.release-tag }}
+          TARBALL_PATH: ${{ steps.tarball.outputs.path }}
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" "$TARBALL_PATH" --clobber --repo "$GITHUB_REPOSITORY"
       - name: Advance major version branch
-        if: steps.release.outputs.created-tag == 'true'
+        if: steps.publish.outputs.publish == 'true'
         env:
           TAG: ${{ steps.release.outputs.release-tag }}
         run: |
