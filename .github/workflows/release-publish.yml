@@ -30,3 +30,8 @@ jobs:
           create-tag: true
           create-release: true
           release-refs: main
+      - name: Advance major version branch
+        if: steps.release.outputs.created-tag == 'true'
+        env:
+          TAG: ${{ steps.release.outputs.release-tag }}
+        run: .github/workflows/script/advance-major-branch
