@@ -5,6 +5,7 @@ set -e
 
 CDPATH="" cd -- "$(dirname -- "$0")/.."
 
+script/bootstrap
 script/bindown -q install shellcheck
 script/bindown -q install zizmor
 
