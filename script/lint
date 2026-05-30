@@ -9,5 +9,5 @@ script/bootstrap
 script/bindown -q install shellcheck
 script/bindown -q install zizmor
 
-bin/shellcheck -e SC1071 -x ./script/* ./src/*
+bin/shellcheck -e SC1071 -x ./script/* ./src/* ./.github/workflows/script/*
 bin/zizmor --no-progress .github/workflows/
