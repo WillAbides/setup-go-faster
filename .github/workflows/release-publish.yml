@@ -1,38 +1,18 @@
-name: release
+name: release-publish
 
 on:
   push:
     branches: [main]
-  pull_request:
-    types: [opened, reopened, synchronize, labeled, unlabeled]
 
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  check-pr:
-    name: check-pr
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      pull-requests: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-      - name: release-train (check-pr)
-        uses: WillAbides/release-train@cd01ea9e19bb396bf659f61e1c840c5174b92de8 # v3.8.5
-        with:
-          release-refs: main
-
   publish:
     name: publish
-    if: github.event_name == 'push'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
