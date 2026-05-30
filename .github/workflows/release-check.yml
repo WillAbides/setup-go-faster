@@ -7,8 +7,8 @@ on:
 permissions: {}
 
 jobs:
-  check-pr:
-    name: check-pr
+  releasable:
+    name: releasable
     runs-on: ubuntu-24.04
     permissions:
       contents: read
