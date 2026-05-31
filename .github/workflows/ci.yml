@@ -87,7 +87,14 @@ jobs:
       - name: install goversion-select binary for this platform
         run: |
           . src/lib
-          ls -la ./bin/_staging
+          echo "--- pwd ---"
+          pwd
+          echo "--- ls workspace ---"
+          ls -la
+          echo "--- ls ./bin ---"
+          ls -la ./bin 2>&1 || true
+          echo "--- find ./bin ---"
+          find ./bin 2>&1 || true
           src="./bin/_staging/goversion-select_$(goos)_$(goarch)"
           if [ "$(goos)" = "windows" ]; then
             src="${src}.exe"
