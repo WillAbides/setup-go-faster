@@ -60,15 +60,25 @@ jobs:
           path: ./bin/_staging
       - name: install goversion-select binary for this platform
         run: |
-          . src/lib
-          ls -la ./bin/_staging
-          src="./bin/_staging/goversion-select_$(goos)_$(goarch)"
-          if [ "$(goos)" = "windows" ]; then
-            src="${src}.exe"
+          case "$RUNNER_OS" in
+            Linux) goos=linux ;;
+            macOS) goos=darwin ;;
+            Windows) goos=windows ;;
+            *) echo "unsupported RUNNER_OS: $RUNNER_OS" >&2; exit 1 ;;
+          esac
+          case "$RUNNER_ARCH" in
+            X86) goarch=386 ;;
+            X64) goarch=amd64 ;;
+            ARM64) goarch=arm64 ;;
+            *) echo "unsupported RUNNER_ARCH: $RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          ext=""
+          if [ "$goos" = "windows" ]; then
+            ext=".exe"
           fi
-          dst="./bin/$(exe_name goversion-select)"
-          mv "$src" "$dst"
-          chmod +x "$dst"
+          mkdir -p ./bin
+          mv "./bin/_staging/goversion-select_${goos}_${goarch}${ext}" "./bin/goversion-select${ext}"
+          chmod +x "./bin/goversion-select${ext}"
           rm -rf ./bin/_staging
       - id: setup_go
         name: install tip
@@ -113,15 +123,25 @@ jobs:
           path: ./bin/_staging
       - name: install goversion-select binary for this platform
         run: |
-          . src/lib
-          ls -la ./bin/_staging
-          src="./bin/_staging/goversion-select_$(goos)_$(goarch)"
-          if [ "$(goos)" = "windows" ]; then
-            src="${src}.exe"
+          case "$RUNNER_OS" in
+            Linux) goos=linux ;;
+            macOS) goos=darwin ;;
+            Windows) goos=windows ;;
+            *) echo "unsupported RUNNER_OS: $RUNNER_OS" >&2; exit 1 ;;
+          esac
+          case "$RUNNER_ARCH" in
+            X86) goarch=386 ;;
+            X64) goarch=amd64 ;;
+            ARM64) goarch=arm64 ;;
+            *) echo "unsupported RUNNER_ARCH: $RUNNER_ARCH" >&2; exit 1 ;;
+          esac
+          ext=""
+          if [ "$goos" = "windows" ]; then
+            ext=".exe"
           fi
-          dst="./bin/$(exe_name goversion-select)"
-          mv "$src" "$dst"
-          chmod +x "$dst"
+          mkdir -p ./bin
+          mv "./bin/_staging/goversion-select_${goos}_${goarch}${ext}" "./bin/goversion-select${ext}"
+          chmod +x "./bin/goversion-select${ext}"
           rm -rf ./bin/_staging
       - id: setup_go_1_15_5
         name: install 1.15.5
