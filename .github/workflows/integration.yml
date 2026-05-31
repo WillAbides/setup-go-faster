@@ -26,6 +26,12 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      # install go so the goversion-select runtime shim can build from
+      # source. once a release exists for this branch the shim downloads
+      # the prebuilt binary and this bootstrap step is no-op overhead.
+      - uses: WillAbides/setup-go-faster@b78d00946efb1fce63dc2e3d89f715a66ca26a0b # v1.17.2
+        with:
+          go-version: '1.26.3'
       - id: setup_go
         name: install tip
         uses: ./
@@ -62,6 +68,12 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      # install go so the goversion-select runtime shim can build from
+      # source. once a release exists for this branch the shim downloads
+      # the prebuilt binary and this bootstrap step is no-op overhead.
+      - uses: WillAbides/setup-go-faster@b78d00946efb1fce63dc2e3d89f715a66ca26a0b # v1.17.2
+        with:
+          go-version: '1.26.3'
       - id: setup_go_1_15_5
         name: install 1.15.5
         uses: ./
