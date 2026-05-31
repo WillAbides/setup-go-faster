@@ -1,9 +1,8 @@
 #!/bin/bash
 #/ release pre-tag hook for release-train:
 #/   1. cross-compile tools/goversion-select for every goos/goarch combo
-#/      that setup-go-faster supports (must match supported_system in
-#/      src/lib) and stage the binaries in $ASSETS_DIR so release-train
-#/      uploads them as release assets;
+#/      that setup-go-faster supports and stage the binaries in
+#/      $ASSETS_DIR so release-train uploads them as release assets;
 #/   2. substitute the VERSION placeholder in src/goversion-select with
 #/      $RELEASE_TAG, commit the substitution, and create the release tag
 #/      locally — release-train picks up the hook-created tag and uses it
@@ -21,32 +20,7 @@ set -euo pipefail
 
 CDPATH="" cd -- "$(dirname -- "$0")/../../.."
 
-platforms=(
-  linux/386
-  linux/amd64
-  linux/arm64
-  darwin/amd64
-  darwin/arm64
-  windows/386
-  windows/amd64
-  windows/arm64
-)
-
-for platform in "${platforms[@]}"; do
-  goos="${platform%/*}"
-  goarch="${platform#*/}"
-  asset="goversion-select_${goos}_${goarch}"
-  if [ "$goos" = "windows" ]; then
-    asset="${asset}.exe"
-  fi
-  echo "building $asset"
-  GOOS="$goos" GOARCH="$goarch" CGO_ENABLED=0 \
-    go -C tools/goversion-select build \
-      -trimpath \
-      -ldflags='-s -w' \
-      -o "$ASSETS_DIR/$asset" \
-      .
-done
+.github/workflows/script/cross-compile-goversion-select
 
 shim="src/goversion-select"
 sed -i.bak -E "s|^VERSION=\"__VERSION__\"\$|VERSION=\"${RELEASE_TAG}\"|" "$shim"

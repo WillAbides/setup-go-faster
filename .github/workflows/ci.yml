@@ -24,8 +24,38 @@ jobs:
       - run: script/generate --check
       - run: script/lint
 
+  build_goversion_select:
+    name: build goversion-select
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      # bootstrap go via the previous (semver-select-era) release of
+      # setup-go-faster so the cross-compile doesn't depend on the
+      # runner's preinstalled go version (the go directive in
+      # tools/goversion-select/go.mod requires 1.26.3, which older
+      # preinstalled go rejects).
+      - uses: WillAbides/setup-go-faster@b78d00946efb1fce63dc2e3d89f715a66ca26a0b # v1.17.2
+        with:
+          go-version: '1.26.3'
+      - name: cross-compile
+        run: |
+          mkdir -p ./out
+          ASSETS_DIR="$PWD/out" .github/workflows/script/cross-compile-goversion-select
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: goversion-select-binaries
+          path: ./out/
+          if-no-files-found: error
+          retention-days: 1
+
   test:
     name: test
+    needs: build_goversion_select
     strategy:
       fail-fast: false
       matrix:
@@ -50,12 +80,21 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      # install go so script/test can build tools/goversion-select. uses
-      # the previous (semver-select-era) release of setup-go-faster so the
-      # bootstrap doesn't depend on the binary this PR is introducing.
-      - uses: WillAbides/setup-go-faster@b78d00946efb1fce63dc2e3d89f715a66ca26a0b # v1.17.2
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          go-version: '1.26.3'
+          name: goversion-select-binaries
+          path: ./bin/_staging
+      - name: install goversion-select binary for this platform
+        run: |
+          . src/lib
+          src="./bin/_staging/goversion-select_$(goos)_$(goarch)"
+          if [ "$(goos)" = "windows" ]; then
+            src="${src}.exe"
+          fi
+          dst="./bin/$(exe_name goversion-select)"
+          mv "$src" "$dst"
+          chmod +x "$dst"
+          rm -rf ./bin/_staging
       - run: script/bootstrap
       - run: script/test
       - run: script/test -long
