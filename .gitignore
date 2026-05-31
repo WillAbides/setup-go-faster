@@ -2,3 +2,4 @@ tmp/
 bin
 .bindown/
 external/
+/tools/goversion-select/goversion-select

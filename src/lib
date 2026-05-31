@@ -213,7 +213,7 @@ select_local_version() {
   fi
 
   # handle other constraints
-  local_matches="$(echo "$local_versions" | ./src/"semver-select" --go -c "$constraint" -n 1 -i -)"
+  local_matches="$(echo "$local_versions" | ./src/"goversion-select" -c "$constraint" -)"
   if [ -n "$local_matches" ]; then
     echo "$local_matches" | tail -1
   fi
@@ -227,19 +227,19 @@ select_remote_version() {
     echo "$got" && return
   fi
 
-  # don't try semver-select on a precise version
+  # don't try goversion-select on a precise version
   if is_precise_version "$constraint"; then
     return
   fi
 
-  echo "$versions" | ./src/"semver-select" --orig --go -c "$constraint" -n 1 -i -
+  echo "$versions" | ./src/"goversion-select" --orig -c "$constraint" -
 }
 
-# uses semver-select to convert a go version to semver
+# uses goversion-select to convert a go version to canonical form
 #  go1.2rc3 -> 1.2.0-rc3
 #  1.2.3rc3 -> 1.2.3-rc3
 normalize_go_version() {
-  ./src/"semver-select" --go -c '*-0' "$1"
+  ./src/"goversion-select" -c '*-0' "$1"
 }
 
 select_go_version_from_file() {

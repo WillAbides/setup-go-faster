@@ -1,0 +1,63 @@
+#!/bin/bash
+#/ release pre-tag hook for release-train:
+#/   1. cross-compile tools/goversion-select for every goos/goarch combo
+#/      that setup-go-faster supports (must match supported_system in
+#/      src/lib) and stage the binaries in $ASSETS_DIR so release-train
+#/      uploads them as release assets;
+#/   2. substitute the VERSION placeholder in src/goversion-select with
+#/      $RELEASE_TAG, commit the substitution, and create the release tag
+#/      locally — release-train picks up the hook-created tag and uses it
+#/      as the release target. The vN major branch advances to that commit
+#/      via advance-major-branch, so customers pinning `@vN` get a
+#/      wrapper with the real tag baked in.
+#/
+#/ The wrapper on main keeps "__VERSION__" so CI (uses: ./) and any
+#/ checkout off main builds from source instead of downloading.
+
+set -euo pipefail
+
+: "${ASSETS_DIR:?must be set by release-train}"
+: "${RELEASE_TAG:?must be set by release-train}"
+
+CDPATH="" cd -- "$(dirname -- "$0")/../../.."
+
+platforms=(
+  linux/386
+  linux/amd64
+  linux/arm64
+  darwin/amd64
+  darwin/arm64
+  windows/386
+  windows/amd64
+  windows/arm64
+)
+
+for platform in "${platforms[@]}"; do
+  goos="${platform%/*}"
+  goarch="${platform#*/}"
+  asset="goversion-select_${goos}_${goarch}"
+  if [ "$goos" = "windows" ]; then
+    asset="${asset}.exe"
+  fi
+  echo "building $asset"
+  GOOS="$goos" GOARCH="$goarch" CGO_ENABLED=0 \
+    go -C tools/goversion-select build \
+      -trimpath \
+      -ldflags='-s -w' \
+      -o "$ASSETS_DIR/$asset" \
+      .
+done
+
+shim="src/goversion-select"
+sed -i.bak -E "s|^VERSION=\"__VERSION__\"\$|VERSION=\"${RELEASE_TAG}\"|" "$shim"
+rm "${shim}.bak"
+if ! grep -qx "VERSION=\"${RELEASE_TAG}\"" "$shim"; then
+  echo "release-pre-tag: failed to substitute VERSION in $shim" >&2
+  exit 1
+fi
+
+git config user.name 'release-train'
+git config user.email 'release-train@users.noreply.github.com'
+git add "$shim"
+git commit -m "release: bake $RELEASE_TAG into $shim"
+git tag "$RELEASE_TAG"

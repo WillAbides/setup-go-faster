@@ -1,0 +1,79 @@
+#!/bin/bash
+#/ Runtime shim for goversion-select.
+#/
+#/ VERSION below is the literal string "__VERSION__" in trunk and on
+#/ feature branches. The release-train pre-tag hook substitutes it with the
+#/ actual release tag and commits the change, so the tagged commit (and
+#/ everything that flows from it — the vN major branch, anything that
+#/ checks out from the tag) has the real version baked in.
+#/
+#/ Resolution:
+#/   - substituted VERSION (real release tag): download the prebuilt
+#/     binary for the host platform from this repo's release of that tag.
+#/   - unsubstituted "__VERSION__" (trunk / PR / local dev): build from
+#/     tools/goversion-select. Requires `go` on PATH; GitHub-hosted runners
+#/     have it preinstalled.
+#/
+#/ GitHub immutable releases guarantee the downloaded asset can't be
+#/ silently swapped after publication.
+
+set -e
+[ -n "${DEBUG:-}" ] && set -x
+
+CDPATH="" cd -- "$(dirname -- "$0")/.."
+
+. src/lib
+
+VERSION="__VERSION__"
+REPO="WillAbides/setup-go-faster"
+bin_path="./bin/$(exe_name "goversion-select")"
+src_dir="./tools/goversion-select"
+
+# stale_build is true when the cached binary is missing or older than any
+# Go source. Only meaningful in source-build mode — downloaded binaries are
+# immutable per release tag and never go stale.
+stale_build() {
+  [ -x "$bin_path" ] || return 0
+  local f
+  for f in "$src_dir"/*.go "$src_dir"/go.mod; do
+    [ -e "$f" ] || continue
+    [ "$f" -nt "$bin_path" ] && return 0
+  done
+  return 1
+}
+
+download_release() {
+  local tag="$1"
+  local asset
+  asset="goversion-select_$(goos)_$(goarch)"
+  if [ "$(goos)" = "windows" ]; then
+    asset="${asset}.exe"
+  fi
+  local url="https://github.com/${REPO}/releases/download/${tag}/${asset}"
+  mkdir -p "$(dirname "$bin_path")"
+  curl -sSL --fail --retry 4 -o "$bin_path" "$url"
+  chmod +x "$bin_path"
+}
+
+build_from_source() {
+  if ! command -v go > /dev/null 2>&1; then
+    return 1
+  fi
+  mkdir -p "$(dirname "$bin_path")"
+  local abs_bin
+  abs_bin="$(cd "$(dirname "$bin_path")" && pwd)/$(basename "$bin_path")"
+  (cd "$src_dir" && go build -trimpath -ldflags='-s -w' -o "$abs_bin" .)
+}
+
+if [ "$VERSION" != "__VERSION__" ]; then
+  if [ ! -x "$bin_path" ]; then
+    download_release "$VERSION"
+  fi
+elif stale_build; then
+  if ! build_from_source; then
+    echo "goversion-select: cannot install -- install Go to build from source, or pin the action to a tagged release of setup-go-faster." >&2
+    exit 1
+  fi
+fi
+
+exec "$bin_path" "$@"
