@@ -3,15 +3,16 @@
 #/   1. cross-compile tools/goversion-select for every goos/goarch combo
 #/      that setup-go-faster supports and stage the binaries in
 #/      $ASSETS_DIR so release-train uploads them as release assets;
-#/   2. substitute the VERSION placeholder in src/goversion-select with
-#/      $RELEASE_TAG, commit the substitution, and create the release tag
-#/      locally — release-train picks up the hook-created tag and uses it
-#/      as the release target. The vN major branch advances to that commit
-#/      via advance-major-branch, so customers pinning `@vN` get a
-#/      wrapper with the real tag baked in.
+#/   2. write $RELEASE_TAG to src/goversion-select.version, commit it, and
+#/      create the release tag locally — release-train picks up the
+#/      hook-created tag and uses it as the release target. The vN major
+#/      branch advances to that commit via advance-major-branch, so
+#/      customers pinning `@vN` get a wrapper that downloads the prebuilt
+#/      release binary.
 #/
-#/ The wrapper on main keeps "__VERSION__" so CI (uses: ./) and any
-#/ checkout off main builds from source instead of downloading.
+#/ The version file is absent on main and feature branches, so checkouts
+#/ from there (including `uses: ./` in this repo's own CI) build the
+#/ goversion-select binary from source instead of downloading.
 
 set -euo pipefail
 
@@ -22,14 +23,9 @@ CDPATH="" cd -- "$(dirname -- "$0")/../../.."
 
 .github/workflows/script/cross-compile-goversion-select
 
-shim="src/goversion-select"
-sed -i.bak -E "s|^VERSION=\"__VERSION__\"\$|VERSION=\"${RELEASE_TAG}\"|" "$shim"
-rm "${shim}.bak"
-if ! grep -qx "VERSION=\"${RELEASE_TAG}\"" "$shim"; then
-  echo "release-pre-tag: failed to substitute VERSION in $shim" >&2
-  exit 1
-fi
+ver_file="src/goversion-select.version"
+echo "$RELEASE_TAG" > "$ver_file"
 
-git add "$shim"
-git commit -m "release: bake $RELEASE_TAG into $shim"
+git add "$ver_file"
+git commit -m "release: bake $RELEASE_TAG into $ver_file"
 git tag "$RELEASE_TAG"

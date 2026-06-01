@@ -1,16 +1,14 @@
 #!/bin/bash
 #/ Runtime shim for goversion-select.
 #/
-#/ VERSION below is the literal string "__VERSION__" in trunk and on
-#/ feature branches. The release-train pre-tag hook substitutes it with the
-#/ actual release tag and commits the change, so the tagged commit (and
-#/ everything that flows from it — the vN major branch, anything that
-#/ checks out from the tag) has the real version baked in.
+#/ The companion file `src/goversion-select.version` (created by the
+#/ release-train pre-tag hook on the release commit) contains the release
+#/ tag string. The wrapper reads it to decide what to do:
 #/
-#/ Resolution:
-#/   - substituted VERSION (real release tag): download the prebuilt
-#/     binary for the host platform from this repo's release of that tag.
-#/   - unsubstituted "__VERSION__" (trunk / PR / local dev): build from
+#/   - file is present and non-empty (release tag / vN branch checkout):
+#/     download the prebuilt binary for the host platform from this repo's
+#/     release of that tag.
+#/   - file is missing or empty (trunk / PR / local dev): build from
 #/     tools/goversion-select. Requires `go` on PATH; GitHub-hosted runners
 #/     have it preinstalled.
 #/
@@ -24,10 +22,13 @@ CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 . src/lib
 
-VERSION="v1.18.0-alpha.0"
+VERSION_FILE="src/goversion-select.version"
 REPO="WillAbides/setup-go-faster"
 bin_path="./bin/$(exe_name "goversion-select")"
 src_dir="./tools/goversion-select"
+
+VERSION=""
+[ -s "$VERSION_FILE" ] && VERSION="$(cat "$VERSION_FILE")"
 
 # stale_build is true when the cached binary is missing or older than any
 # Go source. Only meaningful in source-build mode — downloaded binaries are
@@ -65,7 +66,7 @@ build_from_source() {
   (cd "$src_dir" && go build -trimpath -ldflags='-s -w' -o "$abs_bin" .)
 }
 
-if [ "$VERSION" != "__VERSION__" ]; then
+if [ -n "$VERSION" ]; then
   if [ ! -x "$bin_path" ]; then
     download_release "$VERSION"
   fi
