@@ -17,13 +17,27 @@ jobs:
         id: godev
         run: |
           start=$(date +%s%N)
-          curl -sSfL -o all.json "https://go.dev/dl/?mode=json&include=all"
+          wire=$(curl -sSfL -w '%{size_download}' -o all.json "https://go.dev/dl/?mode=json&include=all")
           end=$(date +%s%N)
           elapsed_ms=$(( (end - start) / 1000000 ))
           size=$(wc -c < all.json)
           echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
           echo "size=$size" >> "$GITHUB_OUTPUT"
-          printf 'go.dev fetch: %s ms (%s bytes)\n' "$elapsed_ms" "$size"
+          echo "wire=$wire" >> "$GITHUB_OUTPUT"
+          printf 'go.dev fetch: %s ms (wire %s bytes, disk %s bytes)\n' "$elapsed_ms" "$wire" "$size"
+
+      - name: fetch go.dev all-releases JSON (compressed)
+        id: godev_gz
+        run: |
+          start=$(date +%s%N)
+          wire=$(curl -sSfL --compressed -w '%{size_download}' -o all_gz.json "https://go.dev/dl/?mode=json&include=all")
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < all_gz.json)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          echo "wire=$wire" >> "$GITHUB_OUTPUT"
+          printf 'go.dev fetch (compressed): %s ms (wire %s bytes, disk %s bytes)\n' "$elapsed_ms" "$wire" "$size"
 
       - name: fetch goreleases versions.txt
         id: goreleases
@@ -61,6 +75,18 @@ jobs:
           echo "size=$size" >> "$GITHUB_OUTPUT"
           printf 'go.dev | jq (piped): %s ms (%s bytes out)\n' "$elapsed_ms" "$size"
 
+      - name: fetch go.dev (compressed) and pipe through jq
+        id: godev_piped_gz
+        run: |
+          start=$(date +%s%N)
+          curl -sSfL --compressed "https://go.dev/dl/?mode=json&include=all" | jq -r '.[].version' > versions_from_godev_gz.txt
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < versions_from_godev_gz.txt)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          printf 'go.dev (compressed) | jq (piped): %s ms (%s bytes out)\n' "$elapsed_ms" "$size"
+
       - name: fetch goversion-select linux_amd64 release asset
         id: gvsbin
         run: |
@@ -77,11 +103,13 @@ jobs:
       - name: summary
         run: |
           {
-            echo "| step | elapsed (ms) | size (bytes) |"
-            echo "|---|---:|---:|"
-            echo "| go.dev fetch (all-releases JSON)             | ${{ steps.godev.outputs.elapsed_ms }} | ${{ steps.godev.outputs.size }} |"
-            echo "| goreleases fetch (versions.txt)              | ${{ steps.goreleases.outputs.elapsed_ms }} | ${{ steps.goreleases.outputs.size }} |"
-            echo "| jq transform                                 | ${{ steps.jq.outputs.elapsed_ms }} | ${{ steps.jq.outputs.size }} |"
-            echo "| go.dev \| jq (piped, end-to-end)             | ${{ steps.godev_piped.outputs.elapsed_ms }} | ${{ steps.godev_piped.outputs.size }} |"
-            echo "| goversion-select_linux_amd64 release asset   | ${{ steps.gvsbin.outputs.elapsed_ms }} | ${{ steps.gvsbin.outputs.size }} |"
+            echo "| step | elapsed (ms) | wire (bytes) | disk/out (bytes) |"
+            echo "|---|---:|---:|---:|"
+            echo "| go.dev fetch (all-releases JSON)             | ${{ steps.godev.outputs.elapsed_ms }} | ${{ steps.godev.outputs.wire }} | ${{ steps.godev.outputs.size }} |"
+            echo "| go.dev fetch (gzip, --compressed)            | ${{ steps.godev_gz.outputs.elapsed_ms }} | ${{ steps.godev_gz.outputs.wire }} | ${{ steps.godev_gz.outputs.size }} |"
+            echo "| goreleases fetch (versions.txt)              | ${{ steps.goreleases.outputs.elapsed_ms }} | — | ${{ steps.goreleases.outputs.size }} |"
+            echo "| jq transform                                 | ${{ steps.jq.outputs.elapsed_ms }} | — | ${{ steps.jq.outputs.size }} |"
+            echo "| go.dev \| jq (piped, end-to-end)             | ${{ steps.godev_piped.outputs.elapsed_ms }} | — | ${{ steps.godev_piped.outputs.size }} |"
+            echo "| go.dev (gzip) \| jq (piped, end-to-end)      | ${{ steps.godev_piped_gz.outputs.elapsed_ms }} | — | ${{ steps.godev_piped_gz.outputs.size }} |"
+            echo "| goversion-select_linux_amd64 release asset   | ${{ steps.gvsbin.outputs.elapsed_ms }} | — | ${{ steps.gvsbin.outputs.size }} |"
           } >> "$GITHUB_STEP_SUMMARY"
