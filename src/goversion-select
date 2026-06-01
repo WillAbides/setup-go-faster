@@ -24,7 +24,7 @@ CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 . src/lib
 
-VERSION="__VERSION__"
+VERSION="v1.18.0-alpha.0"
 REPO="WillAbides/setup-go-faster"
 bin_path="./bin/$(exe_name "goversion-select")"
 src_dir="./tools/goversion-select"
