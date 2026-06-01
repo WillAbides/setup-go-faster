@@ -31,11 +31,16 @@ jobs:
         run: |
           git config --local user.name '${{ github.actor }}'
           git config --local user.email '${{ github.actor }}@users.noreply.github.com'
-      - name: debug — can App push a tag?
+      - name: debug — tag-name pattern test
         run: |
-          git tag debug-app-push-test-${{ github.run_id }} HEAD
-          git push origin debug-app-push-test-${{ github.run_id }} || echo "PUSH FAILED"
-          git push origin :debug-app-push-test-${{ github.run_id }} 2>/dev/null || true
+          rid=${{ github.run_id }}
+          for t in "debug-plain-$rid" "v999.999.999-debug-$rid"; do
+            git tag "$t" HEAD
+            echo "=== pushing $t ==="
+            git push origin "$t" && echo "OK: $t" || echo "FAIL: $t"
+            git push origin ":$t" 2>/dev/null || true
+            git tag -d "$t" 2>/dev/null || true
+          done
       - name: release-train
         id: release
         uses: WillAbides/release-train@a234a745371bf2fef3d64d74e1e9381aa9e6d4f8 # v3.8.6
