@@ -39,6 +39,36 @@ jobs:
           echo "wire=$wire" >> "$GITHUB_OUTPUT"
           printf 'go.dev fetch (compressed): %s ms (wire %s bytes, disk %s bytes)\n' "$elapsed_ms" "$wire" "$size"
 
+      # The default ?mode=json (no include=all) endpoint returns just
+      # [latest_stable, latest_oldstable] — ~23 KB raw, ~6 KB gzipped.
+      # This is what the new resolve_constraint_alias uses for the
+      # stable / oldstable shortcuts, replacing the goreleases hit.
+      - name: fetch go.dev default ?mode=json (stable+oldstable only)
+        id: godev_stable
+        run: |
+          start=$(date +%s%N)
+          wire=$(curl -sSfL -w '%{size_download}' -o stable.json "https://go.dev/dl/?mode=json")
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < stable.json)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          echo "wire=$wire" >> "$GITHUB_OUTPUT"
+          printf 'go.dev fetch (default mode): %s ms (wire %s bytes, disk %s bytes)\n' "$elapsed_ms" "$wire" "$size"
+
+      - name: fetch go.dev default ?mode=json (compressed)
+        id: godev_stable_gz
+        run: |
+          start=$(date +%s%N)
+          wire=$(curl -sSfL --compressed -w '%{size_download}' -o stable_gz.json "https://go.dev/dl/?mode=json")
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < stable_gz.json)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          echo "wire=$wire" >> "$GITHUB_OUTPUT"
+          printf 'go.dev fetch (default mode, compressed): %s ms (wire %s bytes, disk %s bytes)\n' "$elapsed_ms" "$wire" "$size"
+
       - name: fetch goreleases versions.txt
         id: goreleases
         run: |
@@ -231,6 +261,8 @@ jobs:
             echo "|---|---:|---:|---:|"
             echo "| go.dev fetch (all-releases JSON)             | ${{ steps.godev.outputs.elapsed_ms }} | ${{ steps.godev.outputs.wire }} | ${{ steps.godev.outputs.size }} |"
             echo "| go.dev fetch (gzip, --compressed)            | ${{ steps.godev_gz.outputs.elapsed_ms }} | ${{ steps.godev_gz.outputs.wire }} | ${{ steps.godev_gz.outputs.size }} |"
+            echo "| go.dev fetch (default ?mode=json, stable+oldstable)        | ${{ steps.godev_stable.outputs.elapsed_ms }} | ${{ steps.godev_stable.outputs.wire }} | ${{ steps.godev_stable.outputs.size }} |"
+            echo "| go.dev fetch (default ?mode=json, gzip)                    | ${{ steps.godev_stable_gz.outputs.elapsed_ms }} | ${{ steps.godev_stable_gz.outputs.wire }} | ${{ steps.godev_stable_gz.outputs.size }} |"
             echo "| goreleases fetch (versions.txt)              | ${{ steps.goreleases.outputs.elapsed_ms }} | — | ${{ steps.goreleases.outputs.size }} |"
             echo "| jq transform                                 | ${{ steps.jq.outputs.elapsed_ms }} | — | ${{ steps.jq.outputs.size }} |"
             echo "| go.dev \| jq (piped, end-to-end)             | ${{ steps.godev_piped.outputs.elapsed_ms }} | — | ${{ steps.godev_piped.outputs.size }} |"
