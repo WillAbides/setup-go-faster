@@ -8,9 +8,12 @@ setUp() {
   . src/lib
 }
 
-# Nothing special about this one. It just happens to be HEAD of main when writing this.
-# Most recent version is go1.21rc4
-STABLE_VERSIONS_URL="https://raw.githubusercontent.com/WillAbides/goreleases/077db58ac86a8a2fb63c90817090e132eded0f3d/versions.txt"
+# Both fixture files mirror the same goreleases snapshot
+# (077db58a...) that the prior round of long tests pinned, so the
+# expected stable / oldstable resolution stays consistent across
+# the legacy versions.txt path and the new ?mode=json path.
+GODEV_STABLE_FIXTURE="file://$PWD/src/testdata/go-dl-stable-sample.json"
+GODEV_ALL_FIXTURE="file://$PWD/src/testdata/go-dl-all-sample.json"
 
 test_homedir() {
   (
@@ -157,14 +160,14 @@ x;go1.15.7'
 test_select_remote_version_streaming() {
   # Use the checked-in fixture so the test stays offline-reproducible
   # and doesn't depend on go.dev's current state.
-  GODEV_JSON_URL="file://$PWD/src/testdata/go-dl-all-sample.json"
+  GODEV_JSON_URL="$GODEV_ALL_FIXTURE"
   export GODEV_JSON_URL
 
   # Each row: <constraint>;<want>
   #
   # The fixture mirrors the goreleases snapshot pinned at the same SHA
-  # as STABLE_VERSIONS_URL above, so the expected outputs match what
-  # the legacy newline-stdin flow would have produced against that
+  # used by the long tests, so the expected outputs match what the
+  # legacy newline-stdin flow would have produced against that
   # snapshot. is_precise_version cases short-circuit before the curl
   # ever runs.
   tests='*;go1.20.7
@@ -206,9 +209,9 @@ test_supported_system() {
 }
 
 test_resolve_constraint_alias() {
-  assertEquals "1.20.x" "$(resolve_constraint_alias "stable" "$STABLE_VERSIONS_URL" "$SHUNIT_TMPDIR")"
-  assertEquals "1.19.x" "$(resolve_constraint_alias "oldstable" "$STABLE_VERSIONS_URL" "$SHUNIT_TMPDIR")"
-  assertEquals "xxx" "$(resolve_constraint_alias "xxx" "$STABLE_VERSIONS_URL" "$SHUNIT_TMPDIR")"
+  assertEquals "1.20.x" "$(resolve_constraint_alias "stable" "$GODEV_STABLE_FIXTURE")"
+  assertEquals "1.19.x" "$(resolve_constraint_alias "oldstable" "$GODEV_STABLE_FIXTURE")"
+  assertEquals "xxx" "$(resolve_constraint_alias "xxx" "$GODEV_STABLE_FIXTURE")"
 }
 
 . ./external/shunit2

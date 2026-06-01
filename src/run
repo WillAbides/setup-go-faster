@@ -13,7 +13,8 @@
 # IGNORE_LOCAL_GO    # set to non-empty to ignore local go installations
 #
 # for testing:
-# VERSIONS_URL       # override the url used to get the list of known versions
+# GODEV_JSON_URL     # override the url used for the full list of releases
+# GODEV_STABLE_URL   # override the url used for stable / oldstable alias resolution
 # SKIP_MATCHER       # don't issue the add-matcher command because it breaks when running tests on windows
 
 set -e
@@ -23,8 +24,8 @@ CDPATH="" cd -- "$(dirname -- "$0")/.."
 
 . src/lib
 
-VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/WillAbides/goreleases/main/versions.txt}"
 GODEV_JSON_URL="${GODEV_JSON_URL:-https://go.dev/dl/?mode=json&include=all}"
+GODEV_STABLE_URL="${GODEV_STABLE_URL:-https://go.dev/dl/?mode=json}"
 
 debug_out starting run
 
@@ -52,7 +53,7 @@ if [ "$constraint" = "tip" ] || [ "$constraint" = "gotip" ]; then
   INSTALL_GO_TIP=1
 fi
 
-constraint="$(resolve_constraint_alias "$constraint" "$VERSIONS_URL" "$tmp_dir")"
+constraint="$(resolve_constraint_alias "$constraint" "$GODEV_STABLE_URL")"
 
 if [ -z "$constraint" ]; then
   constraint=">=$(select_go_version_from_file "$GITHUB_WORKSPACE/$GO_VERSION_FILE")"
