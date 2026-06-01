@@ -5,6 +5,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   benchmark:
@@ -12,6 +13,9 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      GHCR_NAMESPACE: willabides/setup-go-faster-catalogue-bench
+      GHCR_TAG: latest
     steps:
       - name: fetch go.dev all-releases JSON
         id: godev
@@ -62,6 +66,76 @@ jobs:
           echo "size=$size" >> "$GITHUB_OUTPUT"
           printf 'goversion-select fetch: %s ms (%s bytes)\n' "$elapsed_ms" "$size"
 
+      - name: install oras
+        run: |
+          VER="1.3.0"
+          curl -sSfL "https://github.com/oras-project/oras/releases/download/v${VER}/oras_${VER}_linux_amd64.tar.gz" -o /tmp/oras.tar.gz
+          sudo tar -xzf /tmp/oras.tar.gz -C /usr/local/bin oras
+          oras version
+
+      - name: gzip catalogue and push to ghcr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gzip -nc all.json > all.json.gz
+          ls -la all.json.gz
+          echo "$GH_TOKEN" | oras login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          oras push "ghcr.io/${GHCR_NAMESPACE}:${GHCR_TAG}" \
+            --artifact-type application/vnd.willabides.go-catalogue+gzip \
+            all.json.gz:application/gzip
+
+      - name: anonymous pull benchmark (token + manifest + blob)
+        id: ghcr
+        continue-on-error: true
+        run: |
+          BASE="https://ghcr.io"
+          start=$(date +%s%N)
+
+          # 1. anonymous token (no Authorization header on this request)
+          TOKEN=$(curl -sSfL "${BASE}/token?service=ghcr.io&scope=repository:${GHCR_NAMESPACE}:pull" | jq -r .token)
+          t1=$(date +%s%N)
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "::error ::Could not obtain anonymous token. Package may be private."
+            echo "Make it public via: https://github.com/users/willabides/packages/container/setup-go-faster-catalogue-bench/settings"
+            exit 1
+          fi
+
+          # 2. manifest (bearer token from step 1)
+          MANIFEST=$(curl -sSfL \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.oci.image.manifest.v1+json" \
+            "${BASE}/v2/${GHCR_NAMESPACE}/manifests/${GHCR_TAG}")
+          DIGEST=$(echo "$MANIFEST" | jq -r '.layers[0].digest')
+          t2=$(date +%s%N)
+
+          # 3. blob
+          curl -sSfL \
+            -H "Authorization: Bearer $TOKEN" \
+            -o pulled.gz \
+            "${BASE}/v2/${GHCR_NAMESPACE}/blobs/$DIGEST"
+          end=$(date +%s%N)
+
+          token_ms=$(( (t1 - start) / 1000000 ))
+          manifest_ms=$(( (t2 - t1) / 1000000 ))
+          blob_ms=$(( (end - t2) / 1000000 ))
+          total_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < pulled.gz)
+
+          # integrity check
+          actual="sha256:$(sha256sum pulled.gz | awk '{print $1}')"
+          if [ "$actual" != "$DIGEST" ]; then
+            echo "::error ::digest mismatch: expected $DIGEST, got $actual"
+            exit 1
+          fi
+
+          echo "token_ms=$token_ms" >> "$GITHUB_OUTPUT"
+          echo "manifest_ms=$manifest_ms" >> "$GITHUB_OUTPUT"
+          echo "blob_ms=$blob_ms" >> "$GITHUB_OUTPUT"
+          echo "total_ms=$total_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          printf 'ghcr pull: total=%s ms (token=%s manifest=%s blob=%s) size=%s bytes integrity=OK\n' \
+            "$total_ms" "$token_ms" "$manifest_ms" "$blob_ms" "$size"
+
       - name: summary
         run: |
           {
@@ -71,4 +145,8 @@ jobs:
             echo "| goreleases fetch (versions.txt)              | ${{ steps.goreleases.outputs.elapsed_ms }} | ${{ steps.goreleases.outputs.size }} |"
             echo "| jq transform                                 | ${{ steps.jq.outputs.elapsed_ms }} | ${{ steps.jq.outputs.size }} |"
             echo "| goversion-select_linux_amd64 release asset   | ${{ steps.gvsbin.outputs.elapsed_ms }} | ${{ steps.gvsbin.outputs.size }} |"
+            echo "| ghcr pull total (token+manifest+blob)        | ${{ steps.ghcr.outputs.total_ms }} | ${{ steps.ghcr.outputs.size }} |"
+            echo "|   token request                              | ${{ steps.ghcr.outputs.token_ms }} | |"
+            echo "|   manifest request                           | ${{ steps.ghcr.outputs.manifest_ms }} | |"
+            echo "|   blob download                              | ${{ steps.ghcr.outputs.blob_ms }} | |"
           } >> "$GITHUB_STEP_SUMMARY"
