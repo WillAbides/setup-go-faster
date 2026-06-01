@@ -30,8 +30,6 @@ if ! grep -qx "VERSION=\"${RELEASE_TAG}\"" "$shim"; then
   exit 1
 fi
 
-git config user.name 'release-train'
-git config user.email 'release-train@users.noreply.github.com'
 git add "$shim"
 git commit -m "release: bake $RELEASE_TAG into $shim"
 git tag "$RELEASE_TAG"
