@@ -32,6 +32,7 @@ jobs:
           create-release: true
           release-refs: main
           pre-tag-hook: .github/workflows/script/release-pre-tag
+          debug: true
       - name: Advance major version branch
         if: steps.release.outputs.created-tag == 'true'
         env:
