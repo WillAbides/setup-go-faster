@@ -9,5 +9,16 @@ script/bootstrap
 script/bindown -q install shellcheck
 script/bindown -q install zizmor
 
-bin/shellcheck -e SC1071 -x ./script/* ./src/* ./.github/workflows/script/*
+# Skip non-script artifacts in src/ (e.g. goversion-select.version,
+# a bare release tag written by the release-train pre-tag hook).
+src_files=""
+for f in ./src/*; do
+  case "$f" in
+    *.version) continue ;;
+  esac
+  src_files="$src_files $f"
+done
+
+# shellcheck disable=SC2086  # intentional word-splitting on src_files
+bin/shellcheck -e SC1071 -x ./script/* $src_files ./.github/workflows/script/*
 bin/zizmor --no-progress .github/workflows/

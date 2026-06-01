@@ -20,6 +20,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: release-train (check-pr)
-        uses: WillAbides/release-train@a234a745371bf2fef3d64d74e1e9381aa9e6d4f8 # v3.8.6
+        uses: WillAbides/release-train@7b56e55e8afcd6a40c2c84122ba73e306a559ae0 # v3.9.0
         with:
           release-refs: main
