@@ -31,38 +31,17 @@ jobs:
         run: |
           git config --local user.name '${{ github.actor }}'
           git config --local user.email '${{ github.actor }}@users.noreply.github.com'
-      - name: debug — tag pattern bisect
-        run: |
-          set +e
-          for TAG in v1.18.0-0 v1.18.0-rc1 v1.18.0 v999.999.999-0 v999.999.999-rc1; do
-            echo "=========================================="
-            echo "=== Trying tag: $TAG ==="
-            echo "=========================================="
-            # Fresh commit for each iteration so we're not testing tag replacement
-            date +%s%N > runid.txt
-            git add runid.txt
-            git commit -m "test commit for $TAG"
-            git tag -f "$TAG"
-            if git push origin "$TAG"; then
-              echo "::notice::OK $TAG"
-              git push origin ":$TAG"
-            else
-              echo "::error::FAIL $TAG (exit $?)"
-            fi
-            echo
-          done
-          exit 0
-#      - name: release-train
-#        id: release
-#        uses: WillAbides/release-train@a234a745371bf2fef3d64d74e1e9381aa9e6d4f8 # v3.8.6
-#        with:
-#          create-release: true
-#          release-refs: main
-#          pre-tag-hook: .github/workflows/script/release-pre-tag
-#          github-token: ${{ steps.app-token.outputs.token }}
-#          debug: true
-#      - name: Advance major version branch
-#        if: steps.release.outputs.created-tag == 'true'
-#        env:
-#          TAG: ${{ steps.release.outputs.release-tag }}
-#        run: .github/workflows/script/advance-major-branch
+      - name: release-train
+        id: release
+        uses: WillAbides/release-train@a234a745371bf2fef3d64d74e1e9381aa9e6d4f8 # v3.8.6
+        with:
+          create-release: true
+          release-refs: main
+          pre-tag-hook: .github/workflows/script/release-pre-tag
+          github-token: ${{ steps.app-token.outputs.token }}
+          debug: true
+      - name: Advance major version branch
+        if: steps.release.outputs.created-tag == 'true'
+        env:
+          TAG: ${{ steps.release.outputs.release-tag }}
+        run: .github/workflows/script/advance-major-branch
