@@ -1,0 +1,23 @@
+#!/bin/sh
+#/ script/test-go runs the Go unit tests for tools/goversion-select.
+#/
+#/ Kept separate from script/test (which runs the bash unit tests on
+#/ every CI matrix runner) because not every runner ships a Go version
+#/ recent enough to build tools/goversion-select (the go directive
+#/ requires 1.26.3, and the --json-input mode also requires
+#/ GOEXPERIMENT=jsonv2 which is only available on that release line).
+#/
+#/ The build_goversion_select CI job already installs Go 1.26.3 for the
+#/ cross-compile, so wiring this script in there is the cheapest way to
+#/ exercise the Go tests on every PR.
+
+set -e
+
+CDPATH="" cd -- "$(dirname -- "$0")/.."
+
+if ! command -v go > /dev/null 2>&1; then
+  echo "script/test-go: skipping — go not on PATH" >&2
+  exit 0
+fi
+
+GOEXPERIMENT=jsonv2 go -C tools/goversion-select test ./...

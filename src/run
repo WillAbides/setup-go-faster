@@ -24,6 +24,7 @@ CDPATH="" cd -- "$(dirname -- "$0")/.."
 . src/lib
 
 VERSIONS_URL="${VERSIONS_URL:-https://raw.githubusercontent.com/WillAbides/goreleases/main/versions.txt}"
+GODEV_JSON_URL="${GODEV_JSON_URL:-https://go.dev/dl/?mode=json&include=all}"
 
 debug_out starting run
 
@@ -81,8 +82,7 @@ if [ -z "$lv" ]; then
 fi
 
 if [ -z "$lv" ]; then
-  known_versions="$(get_known_versions "$VERSIONS_URL" "$tmp_dir")"
-  lv="$(select_remote_version "$constraint" "$known_versions")"
+  lv="$(select_remote_version_streaming "$constraint")"
   target_dir="$install_parent/${lv#go}/x64"
 fi
 

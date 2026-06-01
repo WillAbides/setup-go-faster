@@ -22,6 +22,7 @@ do_test_run() {
   export GITHUB_OUTPUT="$tmp_dir/github_output"
   export GITHUB_ACTION_PATH="$PWD"
   export VERSIONS_URL="$STABLE_VERSIONS_URL"
+  export GODEV_JSON_URL="file://$PWD/src/testdata/go-dl-all-sample.json"
   export SKIP_MATCHER=1
   export IGNORE_LOCAL_GO=1
   export GOROOT=""

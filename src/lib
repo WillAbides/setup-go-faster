@@ -177,8 +177,10 @@ exe_name() {
 
 is_precise_version() {
   [[ $1 =~ ^[0-9]+(.([0-9]+)(.[0-9]+)?)?([A-Za-z0-9]+)?$ ]] || return 1
-  # false when minor is >= 21 and patch is empty
-  [ -z "${BASH_REMATCH[2]}" ] || [ "${BASH_REMATCH[2]}" -lt 21 ] || [ -n "${BASH_REMATCH[3]}" ]
+  # false when minor is >= 21 and patch is empty and there is no
+  # pre-release suffix; a non-empty suffix like "rc4" or "beta1"
+  # identifies a single release with no ambiguity.
+  [ -z "${BASH_REMATCH[2]}" ] || [ "${BASH_REMATCH[2]}" -lt 21 ] || [ -n "${BASH_REMATCH[3]}" ] || [ -n "${BASH_REMATCH[4]}" ]
 }
 
 select_go_version() {
@@ -233,6 +235,27 @@ select_remote_version() {
   fi
 
   echo "$versions" | ./src/"goversion-select" --orig -c "$constraint" -
+}
+
+# select_remote_version_streaming picks the highest matching Go release
+# by streaming go.dev's /dl/?mode=json&include=all payload through
+# goversion-select --json-input. go.dev returns the array in
+# semver-descending order, so the first match is the highest match;
+# goversion-select exits on it, curl receives SIGPIPE, and the TCP
+# transfer short-circuits.
+#
+# GODEV_JSON_URL is overridable so tests can point at a file:// fixture.
+#
+# Note: curl runs without -S to suppress the "Failure writing output to
+# destination" stderr line that fires every time the downstream exits
+# early on a match. --fail still surfaces real HTTP errors.
+select_remote_version_streaming() {
+  local constraint="$1"
+  if is_precise_version "$constraint"; then
+    return
+  fi
+  curl -sfL --compressed --retry 4 "$GODEV_JSON_URL" \
+    | ./src/"goversion-select" --orig --json-input -c "$constraint"
 }
 
 # uses goversion-select to convert a go version to canonical form

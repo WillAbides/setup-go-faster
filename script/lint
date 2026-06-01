@@ -10,12 +10,14 @@ script/bindown -q install shellcheck
 script/bindown -q install zizmor
 
 # Skip non-script artifacts in src/ (e.g. goversion-select.version,
-# a bare release tag written by the release-train pre-tag hook).
+# a bare release tag written by the release-train pre-tag hook,
+# or directories like testdata/).
 src_files=""
 for f in ./src/*; do
   case "$f" in
     *.version) continue ;;
   esac
+  [ -d "$f" ] && continue
   src_files="$src_files $f"
 done
 

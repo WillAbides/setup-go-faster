@@ -3,7 +3,7 @@
 //
 // Usage:
 //
-//	goversion-select -c <constraint> [--orig] [<candidate>... | -]
+//	goversion-select -c <constraint> [--orig] [--json-input] [<candidate>... | -]
 //
 // Behavior is fixed (no flags to toggle it):
 //   - candidates are always parsed in Go-native format (go1.20, 1.21rc1, ...)
@@ -17,6 +17,17 @@
 //
 // A candidate of "-" means: read remaining candidates from stdin, one per
 // line.
+//
+// With --json-input, stdin is parsed as the JSON array returned by
+// https://go.dev/dl/?mode=json&include=all (objects with a "version"
+// field; other fields are ignored). The decoder runs streaming and exits
+// on the first constraint match, which lets the upstream curl receive
+// SIGPIPE and short-circuit the rest of the transfer. This *assumes
+// upstream returns the array in semver-descending order* — true for
+// go.dev as of writing; if that ever changes, the selected version may
+// not be the highest matching one. Positional candidates may not be
+// combined with --json-input. Building this mode requires
+// GOEXPERIMENT=jsonv2 (Go 1.26 stdlib gates encoding/json/v2 behind it).
 //
 // The underlying model is `version` — a Go release as a numeric (major,
 // minor, patch) triple plus an optional pre-release tag like "rc1". The
@@ -32,6 +43,7 @@ package main
 import (
 	"bufio"
 	"cmp"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -40,6 +52,9 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"encoding/json/jsontext"
+	json "encoding/json/v2"
 )
 
 func main() {
@@ -51,6 +66,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	constraintFlag := fs.String("c", "", "constraint to match (required)")
 	origFlag := fs.Bool("orig", false, "output the original input string for the top match instead of its canonical form")
+	jsonInputFlag := fs.Bool("json-input", false, "parse stdin as the JSON array returned by https://go.dev/dl/?mode=json&include=all and exit on the first match (stream mode; positional candidates are not allowed)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
@@ -62,6 +78,13 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	if err != nil {
 		fmt.Fprintf(stderr, "goversion-select: invalid constraint: %q\n", *constraintFlag)
 		return 1
+	}
+	if *jsonInputFlag {
+		if len(fs.Args()) > 0 {
+			fmt.Fprintln(stderr, "goversion-select: --json-input does not accept positional candidates")
+			return 2
+		}
+		return runJSONInput(c, *origFlag, stdin, stdout, stderr)
 	}
 	versions, orig := collectCandidates(fs.Args(), stdin)
 	top, ok := topMatch(c, versions)
@@ -75,6 +98,81 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return 0
 	}
 	fmt.Fprintln(stdout, top.String())
+	return 0
+}
+
+// runJSONInput streams the go.dev /dl/?mode=json&include=all payload from
+// stdin and exits on the first constraint match. It relies on the upstream
+// list being semver-descending so that the first match is also the highest
+// match (true for go.dev today; documented in the package comment).
+//
+// Error semantics:
+//   - first match → print and return 0.
+//   - valid array consumed without a match → return 0, no output.
+//   - any decode/IO error before a match (premature EOF, malformed JSON,
+//     non-array root, missing or non-string "version" field, trailing junk
+//     after ']') → return 1 with stderr message. This makes truncated
+//     transfers visible rather than silently masked as "no match".
+func runJSONInput(c constraint, origFlag bool, stdin io.Reader, stdout, stderr io.Writer) int {
+	if stdin == nil {
+		fmt.Fprintln(stderr, "goversion-select: --json-input requires stdin")
+		return 1
+	}
+	dec := jsontext.NewDecoder(stdin)
+	tok, err := dec.ReadToken()
+	if err != nil {
+		fmt.Fprintf(stderr, "goversion-select: --json-input: %v\n", err)
+		return 1
+	}
+	if tok.Kind() != '[' {
+		fmt.Fprintf(stderr, "goversion-select: --json-input: expected JSON array, got %q\n", tok.Kind())
+		return 1
+	}
+	for dec.PeekKind() != ']' {
+		// RejectUnknownMembers is *not* set: go.dev's payload carries
+		// fields beyond "version" (stable, files, ...) that we want to
+		// skip syntactically without allocating.
+		var elt struct {
+			Version *string `json:"version"`
+		}
+		if err := json.UnmarshalDecode(dec, &elt); err != nil {
+			fmt.Fprintf(stderr, "goversion-select: --json-input: %v\n", err)
+			return 1
+		}
+		if elt.Version == nil {
+			fmt.Fprintln(stderr, `goversion-select: --json-input: element missing required "version" field`)
+			return 1
+		}
+		v, err := parseGoVersion(*elt.Version)
+		if err != nil {
+			// Silently skip unparseable values to match the existing
+			// newline-stdin contract — go.dev occasionally exposes
+			// weird tags (e.g. "weekly.*") that the constraint
+			// language wasn't designed to handle.
+			continue
+		}
+		if !c.allows(v) {
+			continue
+		}
+		if origFlag {
+			fmt.Fprintln(stdout, *elt.Version)
+		} else {
+			fmt.Fprintln(stdout, v.String())
+		}
+		return 0
+	}
+	// Consume the closing ']' and verify no trailing junk remains.
+	if _, err := dec.ReadToken(); err != nil {
+		fmt.Fprintf(stderr, "goversion-select: --json-input: %v\n", err)
+		return 1
+	}
+	if _, err := dec.ReadToken(); err != nil && !errors.Is(err, io.EOF) {
+		fmt.Fprintf(stderr, "goversion-select: --json-input: trailing data after JSON array: %v\n", err)
+		return 1
+	} else if err == nil {
+		fmt.Fprintln(stderr, "goversion-select: --json-input: trailing data after JSON array")
+		return 1
+	}
 	return 0
 }
 

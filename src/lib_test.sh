@@ -51,6 +51,8 @@ test_is_precise_version() {
 1.16rc1
 1.21.0
 1.21.1
+1.21rc4
+1.26beta2
   '
 
   for v in $versions; do
@@ -148,6 +150,39 @@ x;go1.15.7'
     input="$(echo "$td" | cut -d ';' -f1)"
     want="$(echo "$td" | cut -d ';' -f2)"
     got="$(select_remote_version "$input" "$versions")"
+    assertEquals "failed on input '$input'" "$want" "$got"
+  done
+}
+
+test_select_remote_version_streaming() {
+  # Use the checked-in fixture so the test stays offline-reproducible
+  # and doesn't depend on go.dev's current state.
+  GODEV_JSON_URL="file://$PWD/src/testdata/go-dl-all-sample.json"
+  export GODEV_JSON_URL
+
+  # Each row: <constraint>;<want>
+  #
+  # The fixture mirrors the goreleases snapshot pinned at the same SHA
+  # as STABLE_VERSIONS_URL above, so the expected outputs match what
+  # the legacy newline-stdin flow would have produced against that
+  # snapshot. is_precise_version cases short-circuit before the curl
+  # ever runs.
+  tests='*;go1.20.7
+1.17.x;go1.17.13
+1.16.x;go1.16.15
+1.15.x;go1.15.15
+1.20.x;go1.20.7
+1.19.x;go1.19.12
+^1;go1.20.7
+^1.20.999;
+1.13.x;go1.13.15
+1.99.x;
+>=1.20.7;go1.20.7'
+
+  for td in $tests; do
+    input="$(echo "$td" | cut -d ';' -f1)"
+    want="$(echo "$td" | cut -d ';' -f2)"
+    got="$(select_remote_version_streaming "$input")"
     assertEquals "failed on input '$input'" "$want" "$got"
   done
 }
