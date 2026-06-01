@@ -49,12 +49,26 @@ jobs:
           echo "size=$size" >> "$GITHUB_OUTPUT"
           printf 'jq transform: %s ms (%s bytes)\n' "$elapsed_ms" "$size"
 
+      - name: fetch goversion-select linux_amd64 release asset
+        id: gvsbin
+        run: |
+          start=$(date +%s%N)
+          curl -sSfL -o goversion-select \
+            "https://github.com/WillAbides/setup-go-faster/releases/download/v1.19.0/goversion-select_linux_amd64"
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < goversion-select)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          printf 'goversion-select fetch: %s ms (%s bytes)\n' "$elapsed_ms" "$size"
+
       - name: summary
         run: |
           {
             echo "| step | elapsed (ms) | size (bytes) |"
             echo "|---|---:|---:|"
-            echo "| go.dev fetch (all-releases JSON) | ${{ steps.godev.outputs.elapsed_ms }} | ${{ steps.godev.outputs.size }} |"
-            echo "| goreleases fetch (versions.txt)  | ${{ steps.goreleases.outputs.elapsed_ms }} | ${{ steps.goreleases.outputs.size }} |"
-            echo "| jq transform                     | ${{ steps.jq.outputs.elapsed_ms }} | ${{ steps.jq.outputs.size }} |"
+            echo "| go.dev fetch (all-releases JSON)             | ${{ steps.godev.outputs.elapsed_ms }} | ${{ steps.godev.outputs.size }} |"
+            echo "| goreleases fetch (versions.txt)              | ${{ steps.goreleases.outputs.elapsed_ms }} | ${{ steps.goreleases.outputs.size }} |"
+            echo "| jq transform                                 | ${{ steps.jq.outputs.elapsed_ms }} | ${{ steps.jq.outputs.size }} |"
+            echo "| goversion-select_linux_amd64 release asset   | ${{ steps.gvsbin.outputs.elapsed_ms }} | ${{ steps.gvsbin.outputs.size }} |"
           } >> "$GITHUB_STEP_SUMMARY"
