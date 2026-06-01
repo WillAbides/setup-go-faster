@@ -59,27 +59,7 @@ jobs:
           name: goversion-select-binaries
           path: ./bin/_staging
       - name: install goversion-select binary for this platform
-        run: |
-          case "$RUNNER_OS" in
-            Linux) goos=linux ;;
-            macOS) goos=darwin ;;
-            Windows) goos=windows ;;
-            *) echo "unsupported RUNNER_OS: $RUNNER_OS" >&2; exit 1 ;;
-          esac
-          case "$RUNNER_ARCH" in
-            X86) goarch=386 ;;
-            X64) goarch=amd64 ;;
-            ARM64) goarch=arm64 ;;
-            *) echo "unsupported RUNNER_ARCH: $RUNNER_ARCH" >&2; exit 1 ;;
-          esac
-          ext=""
-          if [ "$goos" = "windows" ]; then
-            ext=".exe"
-          fi
-          mkdir -p ./bin
-          mv "./bin/_staging/goversion-select_${goos}_${goarch}${ext}" "./bin/goversion-select${ext}"
-          chmod +x "./bin/goversion-select${ext}"
-          rm -rf ./bin/_staging
+        run: .github/workflows/script/install-goversion-select-from-staging
       - id: setup_go
         name: install tip
         uses: ./
@@ -122,27 +102,7 @@ jobs:
           name: goversion-select-binaries
           path: ./bin/_staging
       - name: install goversion-select binary for this platform
-        run: |
-          case "$RUNNER_OS" in
-            Linux) goos=linux ;;
-            macOS) goos=darwin ;;
-            Windows) goos=windows ;;
-            *) echo "unsupported RUNNER_OS: $RUNNER_OS" >&2; exit 1 ;;
-          esac
-          case "$RUNNER_ARCH" in
-            X86) goarch=386 ;;
-            X64) goarch=amd64 ;;
-            ARM64) goarch=arm64 ;;
-            *) echo "unsupported RUNNER_ARCH: $RUNNER_ARCH" >&2; exit 1 ;;
-          esac
-          ext=""
-          if [ "$goos" = "windows" ]; then
-            ext=".exe"
-          fi
-          mkdir -p ./bin
-          mv "./bin/_staging/goversion-select_${goos}_${goarch}${ext}" "./bin/goversion-select${ext}"
-          chmod +x "./bin/goversion-select${ext}"
-          rm -rf ./bin/_staging
+        run: .github/workflows/script/install-goversion-select-from-staging
       - id: setup_go_1_15_5
         name: install 1.15.5
         uses: ./
