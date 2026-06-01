@@ -1,0 +1,60 @@
+name: benchmark-fetch
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: fetch go.dev all-releases JSON
+        id: godev
+        run: |
+          start=$(date +%s%N)
+          curl -sSfL -o all.json "https://go.dev/dl/?mode=json&include=all"
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < all.json)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          printf 'go.dev fetch: %s ms (%s bytes)\n' "$elapsed_ms" "$size"
+
+      - name: fetch goreleases versions.txt
+        id: goreleases
+        run: |
+          start=$(date +%s%N)
+          curl -sSfL -o versions.txt "https://raw.githubusercontent.com/WillAbides/goreleases/main/versions.txt"
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < versions.txt)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          printf 'goreleases fetch: %s ms (%s bytes)\n' "$elapsed_ms" "$size"
+
+      - name: jq transform JSON to versions
+        id: jq
+        run: |
+          start=$(date +%s%N)
+          jq -r '.[].version' all.json > derived.txt
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < derived.txt)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          printf 'jq transform: %s ms (%s bytes)\n' "$elapsed_ms" "$size"
+
+      - name: summary
+        run: |
+          {
+            echo "| step | elapsed (ms) | size (bytes) |"
+            echo "|---|---:|---:|"
+            echo "| go.dev fetch (all-releases JSON) | ${{ steps.godev.outputs.elapsed_ms }} | ${{ steps.godev.outputs.size }} |"
+            echo "| goreleases fetch (versions.txt)  | ${{ steps.goreleases.outputs.elapsed_ms }} | ${{ steps.goreleases.outputs.size }} |"
+            echo "| jq transform                     | ${{ steps.jq.outputs.elapsed_ms }} | ${{ steps.jq.outputs.size }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
