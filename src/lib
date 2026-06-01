@@ -254,8 +254,20 @@ select_remote_version_streaming() {
   if is_precise_version "$constraint"; then
     return
   fi
-  curl -sfL --compressed --retry 4 "$GODEV_JSON_URL" \
-    | ./src/"goversion-select" --orig --json-input -c "$constraint"
+  # file:// URLs are used by the test suite to feed in a checked-in
+  # fixture. Curl's MSYS-on-Windows file:// path handling is unreliable
+  # (it doesn't understand /c/...-style paths), so dispatch local files
+  # through cat for portability.
+  case "$GODEV_JSON_URL" in
+    file://*)
+      cat -- "${GODEV_JSON_URL#file://}" \
+        | ./src/"goversion-select" --orig --json-input -c "$constraint"
+      ;;
+    *)
+      curl -sfL --compressed --retry 4 "$GODEV_JSON_URL" \
+        | ./src/"goversion-select" --orig --json-input -c "$constraint"
+      ;;
+  esac
 }
 
 # uses goversion-select to convert a go version to canonical form
