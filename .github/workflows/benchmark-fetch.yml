@@ -100,6 +100,130 @@ jobs:
           echo "size=$size" >> "$GITHUB_OUTPUT"
           printf 'goversion-select fetch: %s ms (%s bytes)\n' "$elapsed_ms" "$size"
 
+      # ─── streaming-JSON pipeline (prototype: PR-test/willabides/json-stream-goversion-select) ───
+      #
+      # The new flow on the json-stream branch curls go.dev's
+      # ?mode=json&include=all payload directly into goversion-select
+      # --json-input and exits on the first match. Because go.dev returns
+      # the array semver-descending, the *latest* matching version is also
+      # the first match — goversion-select exits, curl receives SIGPIPE,
+      # and the TCP transfer short-circuits. The deeper in the stream the
+      # match lives, the more bytes we have to read first.
+      #
+      # The constraints below sample best-case (1.26.x = first element)
+      # through worst-case (1.10.x = near the end). The expectation is
+      # that wall-clock + wire bytes scale roughly with match depth.
+      - name: install Go 1.26 for streaming binary build
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.3'
+          check-latest: false
+
+      - name: build goversion-select with --json-input
+        id: gvsstream_build
+        run: |
+          git clone --depth 1 --branch willabides/json-stream-goversion-select \
+            https://github.com/WillAbides/setup-go-faster.git stream-src
+          cd stream-src
+          start=$(date +%s%N)
+          GOEXPERIMENT=jsonv2 CGO_ENABLED=0 go -C tools/goversion-select build \
+            -trimpath -ldflags='-s -w' -o "$GITHUB_WORKSPACE/goversion-select-stream" .
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < "$GITHUB_WORKSPACE/goversion-select-stream")
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          printf 'goversion-select build: %s ms (binary %s bytes)\n' "$elapsed_ms" "$size"
+
+      # Run the streaming pipeline once per representative constraint and
+      # capture wall-clock + best-effort wire bytes. `tee >(wc -c > F)`
+      # counts bytes that made it through to the downstream consumer;
+      # tee gets SIGPIPE when goversion-select exits, propagating EOF to
+      # the wc -c branch which writes the count before exiting.
+      - name: stream-pipeline 1.26.x (first match — best case)
+        id: stream_126x
+        run: |
+          bytes_file=$(mktemp)
+          start=$(date +%s%N)
+          set +o pipefail
+          curl -sfL --compressed --retry 4 "https://go.dev/dl/?mode=json&include=all" \
+            | tee >(wc -c > "$bytes_file") \
+            | "$GITHUB_WORKSPACE/goversion-select-stream" --orig --json-input -c '1.26.x' \
+            > match.txt
+          set -o pipefail
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          wait
+          bytes=$(tr -d ' ' < "$bytes_file")
+          match=$(cat match.txt)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "bytes=$bytes" >> "$GITHUB_OUTPUT"
+          echo "match=$match" >> "$GITHUB_OUTPUT"
+          printf '1.26.x: %s ms (read ~%s bytes, matched %s)\n' "$elapsed_ms" "$bytes" "$match"
+
+      - name: stream-pipeline 1.25.x (near top)
+        id: stream_125x
+        run: |
+          bytes_file=$(mktemp)
+          start=$(date +%s%N)
+          set +o pipefail
+          curl -sfL --compressed --retry 4 "https://go.dev/dl/?mode=json&include=all" \
+            | tee >(wc -c > "$bytes_file") \
+            | "$GITHUB_WORKSPACE/goversion-select-stream" --orig --json-input -c '1.25.x' \
+            > match.txt
+          set -o pipefail
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          wait
+          bytes=$(tr -d ' ' < "$bytes_file")
+          match=$(cat match.txt)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "bytes=$bytes" >> "$GITHUB_OUTPUT"
+          echo "match=$match" >> "$GITHUB_OUTPUT"
+          printf '1.25.x: %s ms (read ~%s bytes, matched %s)\n' "$elapsed_ms" "$bytes" "$match"
+
+      - name: stream-pipeline 1.21.x (mid-stream)
+        id: stream_121x
+        run: |
+          bytes_file=$(mktemp)
+          start=$(date +%s%N)
+          set +o pipefail
+          curl -sfL --compressed --retry 4 "https://go.dev/dl/?mode=json&include=all" \
+            | tee >(wc -c > "$bytes_file") \
+            | "$GITHUB_WORKSPACE/goversion-select-stream" --orig --json-input -c '1.21.x' \
+            > match.txt
+          set -o pipefail
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          wait
+          bytes=$(tr -d ' ' < "$bytes_file")
+          match=$(cat match.txt)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "bytes=$bytes" >> "$GITHUB_OUTPUT"
+          echo "match=$match" >> "$GITHUB_OUTPUT"
+          printf '1.21.x: %s ms (read ~%s bytes, matched %s)\n' "$elapsed_ms" "$bytes" "$match"
+
+      - name: stream-pipeline 1.10.x (deep in stream — worst case)
+        id: stream_110x
+        run: |
+          bytes_file=$(mktemp)
+          start=$(date +%s%N)
+          set +o pipefail
+          curl -sfL --compressed --retry 4 "https://go.dev/dl/?mode=json&include=all" \
+            | tee >(wc -c > "$bytes_file") \
+            | "$GITHUB_WORKSPACE/goversion-select-stream" --orig --json-input -c '1.10.x' \
+            > match.txt
+          set -o pipefail
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          wait
+          bytes=$(tr -d ' ' < "$bytes_file")
+          match=$(cat match.txt)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "bytes=$bytes" >> "$GITHUB_OUTPUT"
+          echo "match=$match" >> "$GITHUB_OUTPUT"
+          printf '1.10.x: %s ms (read ~%s bytes, matched %s)\n' "$elapsed_ms" "$bytes" "$match"
+
       - name: summary
         run: |
           {
@@ -112,4 +236,14 @@ jobs:
             echo "| go.dev \| jq (piped, end-to-end)             | ${{ steps.godev_piped.outputs.elapsed_ms }} | — | ${{ steps.godev_piped.outputs.size }} |"
             echo "| go.dev (gzip) \| jq (piped, end-to-end)      | ${{ steps.godev_piped_gz.outputs.elapsed_ms }} | — | ${{ steps.godev_piped_gz.outputs.size }} |"
             echo "| goversion-select_linux_amd64 release asset   | ${{ steps.gvsbin.outputs.elapsed_ms }} | — | ${{ steps.gvsbin.outputs.size }} |"
+            echo ""
+            echo "### streaming-JSON pipeline (early-exit on first match)"
+            echo "Build (Go 1.26 + GOEXPERIMENT=jsonv2): ${{ steps.gvsstream_build.outputs.elapsed_ms }} ms, binary ${{ steps.gvsstream_build.outputs.size }} bytes."
+            echo ""
+            echo "| constraint | matched | elapsed (ms) | bytes through tee |"
+            echo "|---|---|---:|---:|"
+            echo "| 1.26.x (first element)  | ${{ steps.stream_126x.outputs.match }} | ${{ steps.stream_126x.outputs.elapsed_ms }} | ${{ steps.stream_126x.outputs.bytes }} |"
+            echo "| 1.25.x (near top)       | ${{ steps.stream_125x.outputs.match }} | ${{ steps.stream_125x.outputs.elapsed_ms }} | ${{ steps.stream_125x.outputs.bytes }} |"
+            echo "| 1.21.x (mid-stream)     | ${{ steps.stream_121x.outputs.match }} | ${{ steps.stream_121x.outputs.elapsed_ms }} | ${{ steps.stream_121x.outputs.bytes }} |"
+            echo "| 1.10.x (deep in stream) | ${{ steps.stream_110x.outputs.match }} | ${{ steps.stream_110x.outputs.elapsed_ms }} | ${{ steps.stream_110x.outputs.bytes }} |"
           } >> "$GITHUB_STEP_SUMMARY"
