@@ -53,6 +53,18 @@ jobs:
           echo "size=$size" >> "$GITHUB_OUTPUT"
           printf 'jq transform: %s ms (%s bytes)\n' "$elapsed_ms" "$size"
 
+      - name: fetch go.dev and pipe through jq (no intermediate file)
+        id: godev_piped
+        run: |
+          start=$(date +%s%N)
+          curl -sSfL "https://go.dev/dl/?mode=json&include=all" | jq -r '.[].version' > versions_from_godev.txt
+          end=$(date +%s%N)
+          elapsed_ms=$(( (end - start) / 1000000 ))
+          size=$(wc -c < versions_from_godev.txt)
+          echo "elapsed_ms=$elapsed_ms" >> "$GITHUB_OUTPUT"
+          echo "size=$size" >> "$GITHUB_OUTPUT"
+          printf 'go.dev | jq (piped): %s ms (%s bytes out)\n' "$elapsed_ms" "$size"
+
       - name: fetch goversion-select linux_amd64 release asset
         id: gvsbin
         run: |
@@ -144,6 +156,7 @@ jobs:
             echo "| go.dev fetch (all-releases JSON)             | ${{ steps.godev.outputs.elapsed_ms }} | ${{ steps.godev.outputs.size }} |"
             echo "| goreleases fetch (versions.txt)              | ${{ steps.goreleases.outputs.elapsed_ms }} | ${{ steps.goreleases.outputs.size }} |"
             echo "| jq transform                                 | ${{ steps.jq.outputs.elapsed_ms }} | ${{ steps.jq.outputs.size }} |"
+            echo "| go.dev \| jq (piped, end-to-end)             | ${{ steps.godev_piped.outputs.elapsed_ms }} | ${{ steps.godev_piped.outputs.size }} |"
             echo "| goversion-select_linux_amd64 release asset   | ${{ steps.gvsbin.outputs.elapsed_ms }} | ${{ steps.gvsbin.outputs.size }} |"
             echo "| ghcr pull total (token+manifest+blob)        | ${{ steps.ghcr.outputs.total_ms }} | ${{ steps.ghcr.outputs.size }} |"
             echo "|   token request                              | ${{ steps.ghcr.outputs.token_ms }} | |"
