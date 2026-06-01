@@ -147,7 +147,7 @@ jobs:
           start=$(date +%s%N)
           set +o pipefail
           curl -sfL --compressed --retry 4 "https://go.dev/dl/?mode=json&include=all" \
-            | tee >(wc -c > "$bytes_file") \
+            | tee --output-error=exit >(wc -c > "$bytes_file") \
             | "$GITHUB_WORKSPACE/goversion-select-stream" --orig --json-input -c '1.26.x' \
             > match.txt
           set -o pipefail
@@ -168,7 +168,7 @@ jobs:
           start=$(date +%s%N)
           set +o pipefail
           curl -sfL --compressed --retry 4 "https://go.dev/dl/?mode=json&include=all" \
-            | tee >(wc -c > "$bytes_file") \
+            | tee --output-error=exit >(wc -c > "$bytes_file") \
             | "$GITHUB_WORKSPACE/goversion-select-stream" --orig --json-input -c '1.25.x' \
             > match.txt
           set -o pipefail
@@ -189,7 +189,7 @@ jobs:
           start=$(date +%s%N)
           set +o pipefail
           curl -sfL --compressed --retry 4 "https://go.dev/dl/?mode=json&include=all" \
-            | tee >(wc -c > "$bytes_file") \
+            | tee --output-error=exit >(wc -c > "$bytes_file") \
             | "$GITHUB_WORKSPACE/goversion-select-stream" --orig --json-input -c '1.21.x' \
             > match.txt
           set -o pipefail
@@ -210,7 +210,7 @@ jobs:
           start=$(date +%s%N)
           set +o pipefail
           curl -sfL --compressed --retry 4 "https://go.dev/dl/?mode=json&include=all" \
-            | tee >(wc -c > "$bytes_file") \
+            | tee --output-error=exit >(wc -c > "$bytes_file") \
             | "$GITHUB_WORKSPACE/goversion-select-stream" --orig --json-input -c '1.10.x' \
             > match.txt
           set -o pipefail
