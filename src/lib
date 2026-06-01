@@ -257,7 +257,9 @@ _fetch_json_url() {
 # goversion-select exits on it, curl receives SIGPIPE, and the TCP
 # transfer short-circuits.
 #
-# GODEV_JSON_URL is overridable so tests can point at a file:// fixture.
+# GODEV_JSON_URL is overridable so tests can point at a file:// fixture,
+# and so anyone running into a go.dev outage can swap in a mirror without
+# patching the action.
 #
 # Note: curl runs without -S to suppress the "Failure writing output to
 # destination" stderr line that fires every time the downstream exits

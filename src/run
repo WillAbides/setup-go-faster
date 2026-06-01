@@ -12,9 +12,11 @@
 # INSTALL_GO_FORCE   # set to non-empty to force the install
 # IGNORE_LOCAL_GO    # set to non-empty to ignore local go installations
 #
-# for testing:
+# for testing or pointing at a mirror:
 # GODEV_JSON_URL     # override the url used for the full list of releases
 # GODEV_STABLE_URL   # override the url used for stable / oldstable alias resolution
+#
+# for testing:
 # SKIP_MATCHER       # don't issue the add-matcher command because it breaks when running tests on windows
 
 set -e
