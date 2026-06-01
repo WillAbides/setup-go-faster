@@ -177,8 +177,10 @@ exe_name() {
 
 is_precise_version() {
   [[ $1 =~ ^[0-9]+(.([0-9]+)(.[0-9]+)?)?([A-Za-z0-9]+)?$ ]] || return 1
-  # false when minor is >= 21 and patch is empty
-  [ -z "${BASH_REMATCH[2]}" ] || [ "${BASH_REMATCH[2]}" -lt 21 ] || [ -n "${BASH_REMATCH[3]}" ]
+  # false when minor is >= 21 and patch is empty and there is no
+  # pre-release suffix; a non-empty suffix like "rc4" or "beta1"
+  # identifies a single release with no ambiguity.
+  [ -z "${BASH_REMATCH[2]}" ] || [ "${BASH_REMATCH[2]}" -lt 21 ] || [ -n "${BASH_REMATCH[3]}" ] || [ -n "${BASH_REMATCH[4]}" ]
 }
 
 select_go_version() {
@@ -235,6 +237,42 @@ select_remote_version() {
   echo "$versions" | ./src/"goversion-select" --orig -c "$constraint" -
 }
 
+# _fetch_json_url emits the bytes of a JSON endpoint URL on stdout.
+# file:// URLs go through cat for Windows-MSYS portability (curl on
+# Git-bash mis-handles /c/-style paths); anything else goes through
+# curl with the same retry / --compressed setup the streaming consumer
+# expects. Underscore-prefixed because it's a helper, not the public
+# library surface.
+_fetch_json_url() {
+  case "$1" in
+    file://*) cat -- "${1#file://}" ;;
+    *) curl -sfL --compressed --retry 4 "$1" ;;
+  esac
+}
+
+# select_remote_version_streaming picks the highest matching Go release
+# by streaming go.dev's /dl/?mode=json&include=all payload through
+# goversion-select --json-input. go.dev returns the array in
+# semver-descending order, so the first match is the highest match;
+# goversion-select exits on it, curl receives SIGPIPE, and the TCP
+# transfer short-circuits.
+#
+# GODEV_JSON_URL is overridable so tests can point at a file:// fixture,
+# and so anyone running into a go.dev outage can swap in a mirror without
+# patching the action.
+#
+# Note: curl runs without -S to suppress the "Failure writing output to
+# destination" stderr line that fires every time the downstream exits
+# early on a match. --fail still surfaces real HTTP errors.
+select_remote_version_streaming() {
+  local constraint="$1"
+  if is_precise_version "$constraint"; then
+    return
+  fi
+  _fetch_json_url "$GODEV_JSON_URL" \
+    | ./src/"goversion-select" --orig --json-input -c "$constraint"
+}
+
 # uses goversion-select to convert a go version to canonical form
 #  go1.2rc3 -> 1.2.0-rc3
 #  1.2.3rc3 -> 1.2.3-rc3
@@ -271,23 +309,32 @@ get_known_versions() {
   cat "$file"
 }
 
+# get_stable_minor_version returns the minor version number of the
+# current stable Go release (the X in 1.X.Y), e.g. "20" for go1.20.7.
+#
+# Source is the go.dev /dl/?mode=json endpoint (no include=all), which
+# returns just [latest_stable, latest_oldstable] (~23 KB). We pipe the
+# payload through goversion-select --json-input -c '*' which picks the
+# first match in the array — the latest stable release — then peel "go"
+# and split out the minor in pure bash.
 get_stable_minor_version() {
-  local versions_url="$1"
-  local tmp_dir="$2"
-  local versions
-  get_known_versions "$versions_url" "$tmp_dir" | grep -E '^go1\.[0-9]+(\.[0-9]+)?$' | head -1 | awk -F. '{print $2}'
+  local v
+  v="$(_fetch_json_url "$1" | ./src/"goversion-select" --orig --json-input -c '*')"
+  v="${v#go}"
+  v="${v#*.}"
+  echo "${v%%.*}"
 }
 
 resolve_constraint_alias() {
   local constraint="$1"
-  local versions_url="$2"
-  local tmp_dir="$3"
+  local godev_stable_url="$2"
+  local minor_version
   case "$constraint" in
     stable)
-      echo "1.$(get_stable_minor_version "$versions_url" "$tmp_dir").x"
+      echo "1.$(get_stable_minor_version "$godev_stable_url").x"
       ;;
     oldstable)
-      minor_version="$(get_stable_minor_version "$versions_url" "$tmp_dir")"
+      minor_version="$(get_stable_minor_version "$godev_stable_url")"
       echo "1.$((minor_version - 1)).x"
       ;;
     *)

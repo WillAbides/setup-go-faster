@@ -8,10 +8,6 @@ setUp() {
   . src/lib
 }
 
-# Nothing special about this one. It just happens to be HEAD of main when writing this.
-# Most recent version is go1.21rc4
-STABLE_VERSIONS_URL="https://raw.githubusercontent.com/WillAbides/goreleases/077db58ac86a8a2fb63c90817090e132eded0f3d/versions.txt"
-
 do_test_run() {
   tmp_dir="$SHUNIT_TMPDIR"/test_run
   rm -rf -- "$tmp_dir"
@@ -21,7 +17,8 @@ do_test_run() {
   export RUNNER_WORKSPACE="$tmp_dir/runner_workspace"
   export GITHUB_OUTPUT="$tmp_dir/github_output"
   export GITHUB_ACTION_PATH="$PWD"
-  export VERSIONS_URL="$STABLE_VERSIONS_URL"
+  export GODEV_JSON_URL="file://$PWD/src/testdata/go-dl-all-sample.json"
+  export GODEV_STABLE_URL="file://$PWD/src/testdata/go-dl-stable-sample.json"
   export SKIP_MATCHER=1
   export IGNORE_LOCAL_GO=1
   export GOROOT=""

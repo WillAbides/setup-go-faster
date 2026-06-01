@@ -434,3 +434,196 @@ func Test_run_invalidFlag(t *testing.T) {
 		t.Fatalf("stdout should be empty, got %q", stdout.String())
 	}
 }
+
+// jsonStreamSample is a hand-rolled fixture in go.dev /dl/?mode=json
+// shape — semver-descending, mixed pre-releases and patches, deliberately
+// minimal per object. Tests cover both early matches (latest stable case)
+// and deep matches (older minor cases). Two non-version fields are
+// included on the first object to confirm v2's default ignore-unknown
+// behavior actually skips them.
+const jsonStreamSample = `[
+  {"version":"go1.26.3","stable":true,"files":[]},
+  {"version":"go1.26.2"},
+  {"version":"go1.26.1"},
+  {"version":"go1.26.0"},
+  {"version":"go1.26rc3"},
+  {"version":"go1.25.10"},
+  {"version":"go1.25.9"},
+  {"version":"go1.21.13"},
+  {"version":"go1.21.0"},
+  {"version":"go1.16.15"},
+  {"version":"go1.16beta1"},
+  {"version":"go1.10.8"}
+]`
+
+func Test_run_jsonInput(t *testing.T) {
+	cases := []struct {
+		name     string
+		args     []string
+		stdin    string
+		wantOut  []string
+		wantExit int
+		wantErr  string // substring expected in stderr
+	}{
+		{
+			name:    "match at index 0",
+			args:    []string{"--json-input", "-c", "1.26.x"},
+			stdin:   jsonStreamSample,
+			wantOut: []string{"1.26.3"},
+		},
+		{
+			name:    "match deep in stream",
+			args:    []string{"--json-input", "-c", "1.10.x"},
+			stdin:   jsonStreamSample,
+			wantOut: []string{"1.10.8"},
+		},
+		{
+			name:    "match mid stream",
+			args:    []string{"--json-input", "-c", "1.21.x"},
+			stdin:   jsonStreamSample,
+			wantOut: []string{"1.21.13"},
+		},
+		{
+			name:    "orig echoes upstream version",
+			args:    []string{"--json-input", "--orig", "-c", "1.26.x"},
+			stdin:   jsonStreamSample,
+			wantOut: []string{"go1.26.3"},
+		},
+		{
+			name:    "star matches highest",
+			args:    []string{"--json-input", "--orig", "-c", "*"},
+			stdin:   jsonStreamSample,
+			wantOut: []string{"go1.26.3"},
+		},
+		{
+			name:    "prerelease exact match",
+			args:    []string{"--json-input", "--orig", "-c", "=1.26.0-rc3"},
+			stdin:   jsonStreamSample,
+			wantOut: []string{"go1.26rc3"},
+		},
+		{
+			name:    "no match returns empty",
+			args:    []string{"--json-input", "-c", "1.99.x"},
+			stdin:   jsonStreamSample,
+			wantOut: nil,
+		},
+		{
+			name:    "empty array no match",
+			args:    []string{"--json-input", "-c", "1.26.x"},
+			stdin:   `[]`,
+			wantOut: nil,
+		},
+		{
+			name:    "skip unparseable version field",
+			args:    []string{"--json-input", "-c", "1.26.x"},
+			stdin:   `[{"version":"weekly.2020-01-01"},{"version":"go1.26.3"}]`,
+			wantOut: []string{"1.26.3"},
+		},
+		{
+			name:     "positional candidate rejected with --json-input",
+			args:     []string{"--json-input", "-c", "1.26.x", "go1.26.3"},
+			stdin:    jsonStreamSample,
+			wantExit: 2,
+			wantErr:  "does not accept positional candidates",
+		},
+		{
+			name:     "missing version field is schema break",
+			args:     []string{"--json-input", "-c", "1.26.x"},
+			stdin:    `[{"stable":true},{"version":"go1.26.3"}]`,
+			wantExit: 1,
+			wantErr:  `missing required "version" field`,
+		},
+		{
+			name:     "null version is schema break",
+			args:     []string{"--json-input", "-c", "1.26.x"},
+			stdin:    `[{"version":null},{"version":"go1.26.3"}]`,
+			wantExit: 1,
+			wantErr:  `missing required "version" field`,
+		},
+		{
+			name:     "non-string version is decode error",
+			args:     []string{"--json-input", "-c", "1.26.x"},
+			stdin:    `[{"version":123}]`,
+			wantExit: 1,
+			wantErr:  "--json-input",
+		},
+		{
+			name:     "non-array root rejected",
+			args:     []string{"--json-input", "-c", "1.26.x"},
+			stdin:    `{"version":"go1.26.3"}`,
+			wantExit: 1,
+			wantErr:  "expected JSON array",
+		},
+		{
+			name:     "malformed JSON before any match",
+			args:     []string{"--json-input", "-c", "1.26.x"},
+			stdin:    `[{"version":"go1.26.3"`,
+			wantExit: 1,
+			wantErr:  "--json-input",
+		},
+		{
+			name:     "truncated array without close bracket",
+			args:     []string{"--json-input", "-c", "1.99.x"},
+			stdin:    `[{"version":"go1.26.3"},{"version":"go1.26.2"}`,
+			wantExit: 1,
+			wantErr:  "--json-input",
+		},
+		{
+			name:     "trailing junk after closing bracket",
+			args:     []string{"--json-input", "-c", "1.99.x"},
+			stdin:    `[{"version":"go1.26.3"}] garbage`,
+			wantExit: 1,
+			wantErr:  "trailing data",
+		},
+		{
+			name:     "empty stdin",
+			args:     []string{"--json-input", "-c", "1.26.x"},
+			stdin:    ``,
+			wantExit: 1,
+			wantErr:  "--json-input",
+		},
+	}
+	for _, td := range cases {
+		t.Run(td.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			exit := run(td.args, strings.NewReader(td.stdin), &stdout, &stderr)
+			if exit != td.wantExit {
+				t.Fatalf("exit: want %d, got %d (stderr=%q stdout=%q)", td.wantExit, exit, stderr.String(), stdout.String())
+			}
+			gotErr := strings.TrimSpace(stderr.String())
+			if td.wantErr == "" {
+				if gotErr != "" {
+					t.Fatalf("stderr: want empty, got %q", gotErr)
+				}
+			} else if !strings.Contains(gotErr, td.wantErr) {
+				t.Fatalf("stderr: want substring %q, got %q", td.wantErr, gotErr)
+			}
+			gotOut := strings.TrimSpace(stdout.String())
+			if len(td.wantOut) == 0 {
+				if gotOut != "" {
+					t.Fatalf("stdout: want empty, got %q", gotOut)
+				}
+				return
+			}
+			gotLines := strings.Split(gotOut, "\n")
+			if !reflect.DeepEqual(gotLines, td.wantOut) {
+				t.Fatalf("stdout: want %v, got %v", td.wantOut, gotLines)
+			}
+		})
+	}
+}
+
+// Test_run_jsonInput_nilStdin covers the explicit nil-stdin guard in
+// runJSONInput. Going through run() requires a non-nil reader (the binary
+// always supplies os.Stdin), so this is a defensive belt-and-suspenders
+// case for callers that bypass run().
+func Test_run_jsonInput_nilStdin(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	exit := run([]string{"--json-input", "-c", "1.26.x"}, nil, &stdout, &stderr)
+	if exit != 1 {
+		t.Fatalf("exit: want 1, got %d", exit)
+	}
+	if !strings.Contains(stderr.String(), "requires stdin") {
+		t.Fatalf("stderr: want %q, got %q", "requires stdin", stderr.String())
+	}
+}

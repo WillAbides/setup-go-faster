@@ -1,0 +1,4 @@
+[
+  {"version": "go1.20.7", "stable": true},
+  {"version": "go1.19.12", "stable": true}
+]

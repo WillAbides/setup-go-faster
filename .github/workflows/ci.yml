@@ -42,6 +42,8 @@ jobs:
       - uses: WillAbides/setup-go-faster@b78d00946efb1fce63dc2e3d89f715a66ca26a0b # v1.17.2
         with:
           go-version: '1.26.3'
+      - name: go unit tests
+        run: script/test-go
       - name: cross-compile
         run: |
           mkdir -p ./out

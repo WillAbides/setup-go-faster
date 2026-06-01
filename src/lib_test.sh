@@ -8,9 +8,12 @@ setUp() {
   . src/lib
 }
 
-# Nothing special about this one. It just happens to be HEAD of main when writing this.
-# Most recent version is go1.21rc4
-STABLE_VERSIONS_URL="https://raw.githubusercontent.com/WillAbides/goreleases/077db58ac86a8a2fb63c90817090e132eded0f3d/versions.txt"
+# Both fixture files mirror the same goreleases snapshot
+# (077db58a...) that the prior round of long tests pinned, so the
+# expected stable / oldstable resolution stays consistent across
+# the legacy versions.txt path and the new ?mode=json path.
+GODEV_STABLE_FIXTURE="file://$PWD/src/testdata/go-dl-stable-sample.json"
+GODEV_ALL_FIXTURE="file://$PWD/src/testdata/go-dl-all-sample.json"
 
 test_homedir() {
   (
@@ -51,6 +54,8 @@ test_is_precise_version() {
 1.16rc1
 1.21.0
 1.21.1
+1.21rc4
+1.26beta2
   '
 
   for v in $versions; do
@@ -152,6 +157,39 @@ x;go1.15.7'
   done
 }
 
+test_select_remote_version_streaming() {
+  # Use the checked-in fixture so the test stays offline-reproducible
+  # and doesn't depend on go.dev's current state.
+  GODEV_JSON_URL="$GODEV_ALL_FIXTURE"
+  export GODEV_JSON_URL
+
+  # Each row: <constraint>;<want>
+  #
+  # The fixture mirrors the goreleases snapshot pinned at the same SHA
+  # used by the long tests, so the expected outputs match what the
+  # legacy newline-stdin flow would have produced against that
+  # snapshot. is_precise_version cases short-circuit before the curl
+  # ever runs.
+  tests='*;go1.20.7
+1.17.x;go1.17.13
+1.16.x;go1.16.15
+1.15.x;go1.15.15
+1.20.x;go1.20.7
+1.19.x;go1.19.12
+^1;go1.20.7
+^1.20.999;
+1.13.x;go1.13.15
+1.99.x;
+>=1.20.7;go1.20.7'
+
+  for td in $tests; do
+    input="$(echo "$td" | cut -d ';' -f1)"
+    want="$(echo "$td" | cut -d ';' -f2)"
+    got="$(select_remote_version_streaming "$input")"
+    assertEquals "failed on input '$input'" "$want" "$got"
+  done
+}
+
 test_supported_system() {
   assertTrue "linux/amd64" 'supported_system "linux/amd64"'
   assertTrue "linux/386" 'supported_system "linux/386"'
@@ -171,9 +209,9 @@ test_supported_system() {
 }
 
 test_resolve_constraint_alias() {
-  assertEquals "1.20.x" "$(resolve_constraint_alias "stable" "$STABLE_VERSIONS_URL" "$SHUNIT_TMPDIR")"
-  assertEquals "1.19.x" "$(resolve_constraint_alias "oldstable" "$STABLE_VERSIONS_URL" "$SHUNIT_TMPDIR")"
-  assertEquals "xxx" "$(resolve_constraint_alias "xxx" "$STABLE_VERSIONS_URL" "$SHUNIT_TMPDIR")"
+  assertEquals "1.20.x" "$(resolve_constraint_alias "stable" "$GODEV_STABLE_FIXTURE")"
+  assertEquals "1.19.x" "$(resolve_constraint_alias "oldstable" "$GODEV_STABLE_FIXTURE")"
+  assertEquals "xxx" "$(resolve_constraint_alias "xxx" "$GODEV_STABLE_FIXTURE")"
 }
 
 . ./external/shunit2

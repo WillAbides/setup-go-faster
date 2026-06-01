@@ -63,7 +63,7 @@ build_from_source() {
   mkdir -p "$(dirname "$bin_path")"
   local abs_bin
   abs_bin="$(cd "$(dirname "$bin_path")" && pwd)/$(basename "$bin_path")"
-  (cd "$src_dir" && go build -trimpath -ldflags='-s -w' -o "$abs_bin" .)
+  (cd "$src_dir" && GOEXPERIMENT=jsonv2 go build -trimpath -ldflags='-s -w' -o "$abs_bin" .)
 }
 
 if [ -n "$VERSION" ]; then
