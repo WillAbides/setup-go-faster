@@ -16,6 +16,11 @@ jobs:
       contents: write
       pull-requests: read
     steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.RELEASER_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASER_APP_PRIVATE_KEY }}
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -32,6 +37,7 @@ jobs:
           create-release: true
           release-refs: main
           pre-tag-hook: .github/workflows/script/release-pre-tag
+          github-token: ${{ steps.app-token.outputs.token }}
           debug: true
       - name: Advance major version branch
         if: steps.release.outputs.created-tag == 'true'
