@@ -4,8 +4,6 @@ on:
   push:
     branches: [main]
 
-permissions: {}
-
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
