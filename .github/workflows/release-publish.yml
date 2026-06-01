@@ -16,11 +16,12 @@ jobs:
       contents: write
       pull-requests: read
     steps:
-      - uses: actions/create-github-app-token@v3
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: app-token
         with:
           client-id: ${{ vars.RELEASER_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASER_APP_PRIVATE_KEY }}
+          permission-contents: write
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -28,9 +29,11 @@ jobs:
           persist-credentials: true
           token: ${{ steps.app-token.outputs.token }}
       - name: git config
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
         run: |
-          git config --local user.name '${{ github.actor }}'
-          git config --local user.email '${{ github.actor }}@users.noreply.github.com'
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "${GITHUB_ACTOR}@users.noreply.github.com"
       - name: release-train
         id: release
         uses: WillAbides/release-train@a234a745371bf2fef3d64d74e1e9381aa9e6d4f8 # v3.8.6
@@ -39,7 +42,6 @@ jobs:
           release-refs: main
           pre-tag-hook: .github/workflows/script/release-pre-tag
           github-token: ${{ steps.app-token.outputs.token }}
-          debug: true
       - name: Advance major version branch
         if: steps.release.outputs.created-tag == 'true'
         env:
