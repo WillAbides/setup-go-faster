@@ -31,13 +31,27 @@ jobs:
         run: |
           git config --local user.name '${{ github.actor }}'
           git config --local user.email '${{ github.actor }}@users.noreply.github.com'
-      - name: debug — tag a fresh (unpushed) commit
+      - name: debug — tag pattern bisect
         run: |
-          echo "${{ github.run_id }}" > runid.txt
-          git add runid.txt
-          git commit -m "debug commit for run ${{ github.run_id }}"
-          git tag "debug-fresh-${{ github.run_id }}"
-          git push origin "debug-fresh-${{ github.run_id }}"
+          set +e
+          for TAG in v1.18.0-0 v1.18.0-rc1 v1.18.0 v999.999.999-0 v999.999.999-rc1; do
+            echo "=========================================="
+            echo "=== Trying tag: $TAG ==="
+            echo "=========================================="
+            # Fresh commit for each iteration so we're not testing tag replacement
+            date +%s%N > runid.txt
+            git add runid.txt
+            git commit -m "test commit for $TAG"
+            git tag -f "$TAG"
+            if git push origin "$TAG"; then
+              echo "::notice::OK $TAG"
+              git push origin ":$TAG"
+            else
+              echo "::error::FAIL $TAG (exit $?)"
+            fi
+            echo
+          done
+          exit 0
 #      - name: release-train
 #        id: release
 #        uses: WillAbides/release-train@a234a745371bf2fef3d64d74e1e9381aa9e6d4f8 # v3.8.6
