@@ -24,8 +24,38 @@ jobs:
       - run: script/generate --check
       - run: script/lint
 
+  build_goversion_select:
+    name: build goversion-select
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      # bootstrap go via the previous (semver-select-era) release of
+      # setup-go-faster so the cross-compile doesn't depend on the
+      # runner's preinstalled go version (the go directive in
+      # tools/goversion-select/go.mod requires 1.26.3, which older
+      # preinstalled go rejects).
+      - uses: WillAbides/setup-go-faster@b78d00946efb1fce63dc2e3d89f715a66ca26a0b # v1.17.2
+        with:
+          go-version: '1.26.3'
+      - name: cross-compile
+        run: |
+          mkdir -p ./out
+          ASSETS_DIR="$PWD/out" .github/workflows/script/cross-compile-goversion-select
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: goversion-select-binaries
+          path: ./out/
+          if-no-files-found: error
+          retention-days: 1
+
   test:
     name: test
+    needs: build_goversion_select
     strategy:
       fail-fast: false
       matrix:
@@ -50,6 +80,12 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: goversion-select-binaries
+          path: ./bin/_staging
+      - name: install goversion-select binary for this platform
+        run: .github/workflows/script/install-goversion-select-from-staging
       - run: script/bootstrap
       - run: script/test
       - run: script/test -long

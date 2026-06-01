@@ -1,0 +1,41 @@
+#!/bin/bash
+#/ cross-compile tools/goversion-select to every goos/goarch combo that
+#/ setup-go-faster supports (must match supported_system in src/lib) and
+#/ write the binaries to $ASSETS_DIR.
+#/
+#/ Used by the CI build job (which uploads the binaries as a workflow
+#/ artifact so test jobs don't need go on PATH) and by the release-train
+#/ pre-tag hook (which stages them as release assets).
+
+set -euo pipefail
+
+: "${ASSETS_DIR:?must be set}"
+
+CDPATH="" cd -- "$(dirname -- "$0")/../../.."
+
+platforms=(
+  linux/386
+  linux/amd64
+  linux/arm64
+  darwin/amd64
+  darwin/arm64
+  windows/386
+  windows/amd64
+  windows/arm64
+)
+
+for platform in "${platforms[@]}"; do
+  goos="${platform%/*}"
+  goarch="${platform#*/}"
+  asset="goversion-select_${goos}_${goarch}"
+  if [ "$goos" = "windows" ]; then
+    asset="${asset}.exe"
+  fi
+  echo "building $asset"
+  GOOS="$goos" GOARCH="$goarch" CGO_ENABLED=0 \
+    go -C tools/goversion-select build \
+      -trimpath \
+      -ldflags='-s -w' \
+      -o "$ASSETS_DIR/$asset" \
+      .
+done

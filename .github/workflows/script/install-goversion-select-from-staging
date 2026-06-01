@@ -1,0 +1,35 @@
+#!/bin/bash
+#/ install-goversion-select-from-staging — move the matching prebuilt
+#/ goversion-select binary out of ./bin/_staging (where the workflow
+#/ artifact was downloaded) and into ./bin/, then drop the staging dir.
+#/
+#/ Used by ci.yml and integration.yml so test jobs run against the
+#/ binary that the build_goversion_select job cross-compiled instead
+#/ of trying to source-build it on runners that may not have a recent
+#/ enough go on PATH.
+
+set -euo pipefail
+
+case "$RUNNER_OS" in
+  Linux) goos=linux ;;
+  macOS) goos=darwin ;;
+  Windows) goos=windows ;;
+  *) echo "unsupported RUNNER_OS: $RUNNER_OS" >&2; exit 1 ;;
+esac
+
+case "$RUNNER_ARCH" in
+  X86) goarch=386 ;;
+  X64) goarch=amd64 ;;
+  ARM64) goarch=arm64 ;;
+  *) echo "unsupported RUNNER_ARCH: $RUNNER_ARCH" >&2; exit 1 ;;
+esac
+
+ext=""
+if [ "$goos" = "windows" ]; then
+  ext=".exe"
+fi
+
+mkdir -p ./bin
+mv "./bin/_staging/goversion-select_${goos}_${goarch}${ext}" "./bin/goversion-select${ext}"
+chmod +x "./bin/goversion-select${ext}"
+rm -rf ./bin/_staging
